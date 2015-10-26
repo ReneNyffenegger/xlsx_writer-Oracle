@@ -212,6 +212,7 @@ create or replace package xlsx_writer as -- {{{
 
   function create_xlsx        (xlsx        in out book_r) return blob;
 
+  function col_to_letter(c integer) return varchar2;
 
 end xlsx_writer; -- }}}
 /

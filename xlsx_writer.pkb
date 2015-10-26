@@ -756,6 +756,9 @@ create or replace package body xlsx_writer as -- {{{
 
   end create_xlsx; -- }}}
 
+  begin
+    dbms_session.set_nls('nls_numeric_characters', '''. ''');
+
 end xlsx_writer; -- }}}
 /
 show errors

@@ -205,16 +205,18 @@ create or replace package body xlsx_writer as -- {{{
                              name            varchar2,
                              size_           number,
                              color           varchar2 := null,
-                             u               boolean  := false,
-                             b               boolean  := false) return integer is
+                             b               boolean  := false,
+                             i               boolean  := false,
+                             u               boolean  := false) return integer is
   begin
 
       xlsx.fonts.extend;
       xlsx.fonts(xlsx.fonts.count).name  := name; 
       xlsx.fonts(xlsx.fonts.count).size_ := size_; 
       xlsx.fonts(xlsx.fonts.count).color := color; 
-      xlsx.fonts(xlsx.fonts.count).u     := u; 
       xlsx.fonts(xlsx.fonts.count).b     := b; 
+      xlsx.fonts(xlsx.fonts.count).i     := i; 
+      xlsx.fonts(xlsx.fonts.count).u     := u; 
 
       return xlsx.fonts.count; -- Not returning xlsx.fonts.count because of default font.
 
@@ -435,6 +437,10 @@ create or replace package body xlsx_writer as -- {{{
 
       if xlsx.fonts(f).color is not null then
          ap(ret, '<color ' || xlsx.fonts(f).color || '/>');
+      end if;
+
+      if xlsx.fonts(f).i then
+         ap(ret, '<i/>');
       end if;
 
       if xlsx.fonts(f).b then

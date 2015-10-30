@@ -24,8 +24,9 @@ create or replace package xlsx_writer as -- {{{
   type font_r               is record(name        varchar2(100),
                                       size_       number       ,
                                       color       varchar2(100), -- «theme="1"»  or  «rgb="FFFF0000"»
-                                      u           boolean      ,
-                                      b           boolean
+                                      b           boolean      ,
+                                      i           boolean      ,
+                                      u           boolean
                                   --  family_val  number         -- <family val="2" /> 
                                     );
 
@@ -171,8 +172,9 @@ create or replace package xlsx_writer as -- {{{
                                name                varchar2,
                                size_               number,
                                color               varchar2   := null,
-                               u                   boolean    := false,
-                               b                   boolean    := false) return integer;
+                               b                   boolean    := false,
+                               i                   boolean    := false,
+                               u                   boolean    := false) return integer;
 
   function add_fill           (xlsx         in out book_r,
                                raw_                varchar2) return integer;

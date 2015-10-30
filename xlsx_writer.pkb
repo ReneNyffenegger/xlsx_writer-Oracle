@@ -162,7 +162,7 @@ create or replace package body xlsx_writer as -- {{{
                                sheet         integer,
                                r             integer,
                                c             integer,
-                               style_id      integer,
+                               style_id      integer  :=    0,
                                text          varchar2 := null,
                                value_        number   := null,
                                formula       varchar2 := null) is

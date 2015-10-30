@@ -505,9 +505,9 @@ create or replace package body xlsx_writer as -- {{{
 
   ap(ret, '</cellXfs>'); -- }}}
 
-    ap(ret, q'{<cellStyles count="33"> <!-- {{{ -->
+    ap(ret, q'{<cellStyles count="33">
       <cellStyle name="Normal" xfId="0" builtinId="0" />
-   </cellStyles> <!-- }}} -->}');
+   </cellStyles>}');
 
     ap(ret, q'{<dxfs count="0" />}');
 

@@ -10,9 +10,9 @@ begin
   workbook := xlsx_writer.start_book;
   sheet    := xlsx_writer.add_sheet  (workbook, 'Name of the sheet');
 
-  xlsx_writer.add_row(workbook, sheet, 1);
-  xlsx_writer.add_row(workbook, sheet, 2);
-  xlsx_writer.add_row(workbook, sheet, 3);
+--xlsx_writer.add_row(workbook, sheet, 1);
+--xlsx_writer.add_row(workbook, sheet, 2);
+--xlsx_writer.add_row(workbook, sheet, 3);
 
   xlsx_writer.add_cell(workbook, sheet, 1, 1, text => 'foo'); 
   xlsx_writer.add_cell(workbook, sheet, 2, 2, text => 'bar'); 

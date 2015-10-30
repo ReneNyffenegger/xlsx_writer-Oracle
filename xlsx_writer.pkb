@@ -152,7 +152,7 @@ create or replace package body xlsx_writer as -- {{{
          raise_application_error(-20800, 'row ' || r || ' already exists');
       end if;
 
-      xlsx.sheets(sheet).rows_(r).cells  := new cell_t();
+--    xlsx.sheets(sheet).rows_(r).cells  := new cell_t();
 
       xlsx.sheets(sheet).rows_(r).height := height;
 
@@ -176,11 +176,9 @@ create or replace package body xlsx_writer as -- {{{
        raise_application_error(-20800, 'style id is null for cell ' || r || '/' || c);
     end if;
 
-    xlsx.sheets(sheet).rows_(r).cells.extend;
-    xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).c        := c;
-    xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).style_id := style_id;
-    xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).value_   := value_;
-    xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).formula  := formula;
+    xlsx.sheets(sheet).rows_(r).cells(c).style_id := style_id;
+    xlsx.sheets(sheet).rows_(r).cells(c).value_   := value_;
+    xlsx.sheets(sheet).rows_(r).cells(c).formula  := formula;
 
     if text is not null then -- {{{
        xlsx.shared_strings.extend;
@@ -190,7 +188,7 @@ create or replace package body xlsx_writer as -- {{{
                                                                            '>', '&lt;' ),
                                                                            '<', '&gt;' );
  
-       xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).shared_string_id := xlsx.shared_strings.count-1;
+       xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id := xlsx.shared_strings.count-1;
     end if; -- }}}
 
        
@@ -335,9 +333,10 @@ create or replace package body xlsx_writer as -- {{{
 
     declare
       r pls_integer;
+      c pls_integer;
     begin
       r := xlsx.sheets(sheet).rows_.first;
-      while r is not null loop
+      while r is not null loop -- {{{
  
         ap(ret, '<row');
         add_attr(ret, 'r', r);
@@ -353,12 +352,12 @@ create or replace package body xlsx_writer as -- {{{
            raise_application_error(-20800, 'Row ' || r || ' does not contain any cells');
         end if;
 
-        for c in 1 .. xlsx.sheets(sheet).rows_(r).cells.count loop
+        c := xlsx.sheets(sheet).rows_(r).cells.first;
+        while c is not null loop -- {{{
 
           ap(ret, '<c');
 
-
-          add_attr(ret, 'r', col_to_letter(xlsx.sheets(sheet).rows_(r).cells(c).c) || r);
+          add_attr(ret, 'r', col_to_letter(c) || r);
           add_attr(ret, 's', xlsx.sheets(sheet).rows_(r).cells(c).style_id);
 
           if xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id is not null then
@@ -380,15 +379,16 @@ create or replace package body xlsx_writer as -- {{{
              ap(ret, '<v>' || xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id || '</v>');
           end if;
 
-
           ap(ret, '</c>');
 
-        end loop;
+          c := xlsx.sheets(sheet).rows_(r).cells.next(c);
+
+        end loop; -- }}}
         
         r := xlsx.sheets(sheet).rows_.next(r);
  
         ap(ret, '</row>');
-      end loop;
+      end loop; -- }}}
     end;
 
     ap(ret, '</sheetData>'); -- }}}

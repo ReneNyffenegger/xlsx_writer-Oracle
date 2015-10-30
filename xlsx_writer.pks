@@ -77,13 +77,12 @@ create or replace package xlsx_writer as -- {{{
 
   -- {{{ Cell
 
-  type cell_r               is record(c                integer,
-                                      style_id         integer,
+  type cell_r               is record(style_id         integer,
                                       shared_string_id integer,
                                       value_           number,
                                       formula          varchar2(4000));
                
-  type cell_t               is table of cell_r;
+  type cell_t               is table of cell_r index by pls_integer;
 
   -- }}}
 

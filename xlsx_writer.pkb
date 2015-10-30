@@ -266,14 +266,16 @@ create or replace package body xlsx_writer as -- {{{
   end add_cell_style; -- }}}
 
   function add_num_fmt     (xlsx     in out book_r, -- {{{
-                            raw_            varchar2) return integer is
+                            raw_            varchar2,
+                            return_id       integer) return integer is
 
   begin
 
     xlsx.num_fmts.extend;
     xlsx.num_fmts(xlsx.num_fmts.count).raw_ := raw_;
 
-    return xlsx.num_fmts.count - 1;
+--  return xlsx.num_fmts.count - 1;
+    return return_id;
 
   end add_num_fmt; -- }}}
 
@@ -556,6 +558,7 @@ create or replace package body xlsx_writer as -- {{{
 
     ap(ret, '</sheets>'); -- }}}
 
+--  ap(ret, '<calcPr calcOnSave="0" />');
     ap(ret, '</workbook>'); -- }}}
 
     return ret;

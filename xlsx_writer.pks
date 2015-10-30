@@ -164,7 +164,8 @@ create or replace package xlsx_writer as -- {{{
                                raw_                varchar2) return integer;
 
   function add_num_fmt        (xlsx         in out book_r,
-                               raw_                varchar2) return integer;
+                               raw_                varchar2,
+                               return_id           integer) return integer;
 
   function add_font           (xlsx         in out book_r,
                                name                varchar2,

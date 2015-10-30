@@ -308,24 +308,26 @@ create or replace package body xlsx_writer as -- {{{
 
     ap(ret, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
 
-    ap(ret, '<cols>'); -- {{{
 
-    for i in 1 .. xlsx.sheets(sheet).col_widths.count loop
+    if xlsx.sheets(sheet).col_widths.count > 0 then -- {{{
+      ap(ret, '<cols>');
 
-      ap(ret, '<col');
+      for i in 1 .. xlsx.sheets(sheet).col_widths.count loop -- {{{
 
-      add_attr(ret, 'min'        , xlsx.sheets(sheet).col_widths(i).start_col);
-      add_attr(ret, 'max'        , xlsx.sheets(sheet).col_widths(i).end_col  );
-      add_attr(ret, 'width'      , xlsx.sheets(sheet).col_widths(i).width    );
---    add_attr(ret, 'style'      , xlsx.sheets(sheet).col_widths(i).style    );
-      add_attr(ret, 'customWidth', 1);
+        ap(ret, '<col');
 
-      ap (ret, '/>');
+        add_attr(ret, 'min'        , xlsx.sheets(sheet).col_widths(i).start_col);
+        add_attr(ret, 'max'        , xlsx.sheets(sheet).col_widths(i).end_col  );
+        add_attr(ret, 'width'      , xlsx.sheets(sheet).col_widths(i).width    );
+--      add_attr(ret, 'style'      , xlsx.sheets(sheet).col_widths(i).style    );
+        add_attr(ret, 'customWidth', 1);
 
+        ap (ret, '/>');
 
-    end loop;
+      end loop; -- }}}
 
-    ap(ret, '</cols>'); -- }}}
+      ap(ret, '</cols>');
+    end if; -- }}}
 
     ap(ret, '<sheetData>'); -- {{{
 

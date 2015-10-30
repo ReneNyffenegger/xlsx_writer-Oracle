@@ -216,7 +216,7 @@ create or replace package body xlsx_writer as -- {{{
       xlsx.fonts(xlsx.fonts.count).u     := u; 
       xlsx.fonts(xlsx.fonts.count).b     := b; 
 
-      return xlsx.fonts.count -1;
+      return xlsx.fonts.count; -- Not returning xlsx.fonts.count because of default font.
 
   end add_font; -- }}}
 
@@ -425,6 +425,8 @@ create or replace package body xlsx_writer as -- {{{
     end if; -- }}}
 
     ap(ret, '<fonts>'); -- {{{
+
+    ap(ret, '<font><sz val="11"/><name val="Calibri" /></font>'); -- Default font.
 
     for f in 1 .. xlsx.fonts.count loop -- {{{
 

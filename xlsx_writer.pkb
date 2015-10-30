@@ -35,16 +35,17 @@ create or replace package body xlsx_writer as -- {{{
     ret book_r;
   begin
 
-    ret.sheets          := new sheet_t           ();
+    ret.sheets               := new sheet_t           ();
 
-    ret.cell_styles     := new cell_style_t      ();
-    ret.borders         := new border_t          ();
-    ret.fonts           := new font_t            ();
-    ret.fills           := new fill_t            ();
-    ret.num_fmts        := new num_fmt_t         ();
-    ret.shared_strings  := new shared_string_t   ();
-    ret.medias          := new media_t           ();
-    ret.drawings        := new drawing_t         ();
+    ret.cell_styles          := new cell_style_t      ();
+    ret.borders              := new border_t          ();
+    ret.fonts                := new font_t            ();
+    ret.fills                := new fill_t            ();
+    ret.num_fmts             := new num_fmt_t         ();
+    ret.shared_strings       := new shared_string_t   ();
+    ret.medias               := new media_t           ();
+    ret.calc_chain_elems     := new calc_chain_elem_t ();
+    ret.drawings             := new drawing_t         ();
 
     return ret;
 
@@ -189,6 +190,14 @@ create or replace package body xlsx_writer as -- {{{
     xlsx.sheets(sheet).rows_(r).cells(c).value_   := value_;
     xlsx.sheets(sheet).rows_(r).cells(c).formula  := formula;
 
+    if formula is not null then -- {{{
+
+       xlsx.calc_chain_elems.extend;
+       xlsx.calc_chain_elems(xlsx.calc_chain_elems.count).cell_reference := col_to_letter(c) || r;
+       xlsx.calc_chain_elems(xlsx.calc_chain_elems.count).sheet          := sheet;
+
+    end if; -- }}}
+
     if text is not null then -- {{{
        xlsx.shared_strings.extend;
        xlsx.shared_strings(xlsx.shared_strings.count).val := replace(
@@ -199,8 +208,6 @@ create or replace package body xlsx_writer as -- {{{
  
        xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id := xlsx.shared_strings.count-1;
     end if; -- }}}
-
-       
 
   end add_cell; -- }}}
 
@@ -561,6 +568,10 @@ create or replace package body xlsx_writer as -- {{{
 
     ap(ret, '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'); -- {{{
 
+--  This line obviously necessary to prevent «has changed» message when xlsx
+--  is closed and contains formulas.
+    ap(ret, '  <fileVersion appName="xl" lastEdited="4" />');
+
     ap(ret, '<sheets>'); -- {{{
 
     for s in 1 .. xlsx.sheets.count loop -- {{{
@@ -577,7 +588,12 @@ create or replace package body xlsx_writer as -- {{{
 
     ap(ret, '</sheets>'); -- }}}
 
+--  This line obviously necessary to prevent «has changed» message when xlsx
+--  is closed and contains formulas.
+    ap(ret, '<calcPr calcId="125725" />');
+
 --  ap(ret, '<calcPr calcOnSave="0" />');
+
     ap(ret, '</workbook>'); -- }}}
 
     return ret;
@@ -677,6 +693,14 @@ create or replace package body xlsx_writer as -- {{{
 
     end loop;
 
+--  if xlsx.calc_chain_elems.count > 0 then
+--     if ret is null then
+--        ret := start_xml_blob;
+--        ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+--     end if;
+--     ap(ret, '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml" />');
+--  end if;
+
 
     if ret is not null then
        ap(ret, '</Relationships>');
@@ -716,6 +740,27 @@ create or replace package body xlsx_writer as -- {{{
 
   end content_types; -- }}}
 
+  function xl_calcChain(xlsx in out book_r) return blob is -- {{{
+    ret blob := start_xml_blob;
+  begin
+
+    ap(ret, '<calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
+
+    for e in 1 .. xlsx.calc_chain_elems.count loop
+
+        ap(ret, '<c');
+        add_attr(ret, 'r', xlsx.calc_chain_elems(e).cell_reference);
+        add_attr(ret, 'i', xlsx.calc_chain_elems(e).sheet         );
+        ap(ret, '/>');
+
+    end loop;
+
+    ap(ret, '</calcChain>');
+
+    return ret;
+
+  end xl_calcChain; -- }}}
+
   -- }}}
 
   function create_xlsx(xlsx in out book_r) return blob is -- {{{
@@ -748,6 +793,7 @@ create or replace package body xlsx_writer as -- {{{
        xb_xl_worksheets_rels_sheet  := xl_worksheets_rels_sheet  (xlsx, s);
        if xb_xl_worksheets_rels_sheet is not null then
           zipper.addFile(xlsx_b, 'xl/worksheets/_rels/sheet' || s || '.xml.rels', xb_xl_worksheets_rels_sheet);
+
        end if;
     end loop;
 
@@ -761,6 +807,11 @@ create or replace package body xlsx_writer as -- {{{
     add_blob_to_zip(xlsx_b, 'docProps/app.xml'                   , docProps_app              ()    );
     add_blob_to_zip(xlsx_b, 'docProps/core.xml'                  , docProps_core             (xlsx));
     add_blob_to_zip(xlsx_b, 'xl/_rels/workbook.xml.rels'         , xl_rels_workbook          (xlsx));
+
+    if xlsx.calc_chain_elems.count > 0 then
+       add_blob_to_zip(xlsx_b, 'xl/calcChain.xml'                , xl_calcChain              (xlsx));
+    end if;
+
     add_blob_to_zip(xlsx_b, 'xl/drawings/_rels/drawing1.xml.rels', xl_drawings_rels_drawing1 (xlsx));
 
     for d in 1 .. xlsx.drawings.count loop

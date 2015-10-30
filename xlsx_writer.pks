@@ -124,6 +124,15 @@ create or replace package xlsx_writer as -- {{{
 
   -- }}}
 
+  -- {{{ Calc Chain
+
+  type calc_chain_elem_r    is record(cell_reference   varchar2(10),
+                                      sheet            integer);
+
+  type calc_chain_elem_t    is table of calc_chain_elem_r;
+
+  -- }}}
+
   -- {{{ Drawings
 
   type drawing_r            is record(raw_             varchar2(30000));
@@ -134,15 +143,16 @@ create or replace package xlsx_writer as -- {{{
 
   -- {{{ The book!
 
-  type book_r               is record(sheets          sheet_t,
-                                      cell_styles     cell_style_t,
-                                      borders         border_t,
-                                      fonts           font_t,
-                                      fills           fill_t,
-                                      num_fmts        num_fmt_t,
-                                      shared_strings  shared_string_t,
-                                      medias          media_t,
-                                      drawings        drawing_t);
+  type book_r               is record(sheets              sheet_t,
+                                      cell_styles         cell_style_t,
+                                      borders             border_t,
+                                      fonts               font_t,
+                                      fills               fill_t,
+                                      num_fmts            num_fmt_t,
+                                      shared_strings      shared_string_t,
+                                      medias              media_t,
+                                      calc_chain_elems    calc_chain_elem_t,
+                                      drawings            drawing_t);
 
   -- }}}
 

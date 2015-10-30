@@ -1,3 +1,4 @@
+set define off
 create or replace package body xlsx_writer as -- {{{
 -- vi: foldmarker={{{,}}}
 
@@ -460,8 +461,7 @@ create or replace package body xlsx_writer as -- {{{
 
     end loop; -- }}}
 
-
-    ap(ret, '</fills>}'); -- }}}
+    ap(ret, '</fills>'); -- }}}
 
     ap(ret, '<borders>'); -- {{{
 

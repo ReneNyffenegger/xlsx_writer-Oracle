@@ -183,7 +183,11 @@ create or replace package body xlsx_writer as -- {{{
 
     if text is not null then -- {{{
        xlsx.shared_strings.extend;
-       xlsx.shared_strings(xlsx.shared_strings.count).val := text;
+       xlsx.shared_strings(xlsx.shared_strings.count).val := replace(
+                                                             replace(
+                                                             replace(text, '&', '&amp;'),
+                                                                           '>', '&lt;' ),
+                                                                           '<', '&gt;' );
  
        xlsx.sheets(sheet).rows_(r).cells(xlsx.sheets(sheet).rows_(r).cells.count).shared_string_id := xlsx.shared_strings.count-1;
     end if; -- }}}

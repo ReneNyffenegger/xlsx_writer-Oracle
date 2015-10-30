@@ -26,6 +26,11 @@ create or replace package body xlsx_writer as -- {{{
     ap(b, ' ' || attr_name || '="' || attr_value || '"');
   end add_attr; -- }}}
 
+  procedure warning(text varchar2) is -- {{{
+  begin
+    dbms_output.put_line('! warnining: ' || text);
+  end warning; -- }}}
+
   function start_book return book_r is -- {{{
     ret book_r;
   begin
@@ -170,6 +175,10 @@ create or replace package body xlsx_writer as -- {{{
 
     if not does_row_exist(xlsx, sheet, r) then
        add_row(xlsx, sheet, r);
+    end if;
+
+    if xlsx.sheets(sheet).rows_(r).cells.exists(c) then
+       warning('Cell ' || c || ' in row ' || r || ' already exists.');
     end if;
 
     if style_id is null then

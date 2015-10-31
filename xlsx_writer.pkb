@@ -570,7 +570,7 @@ create or replace package body xlsx_writer as -- {{{
 
 --  This line obviously necessary to prevent «has changed» message when xlsx
 --  is closed and contains formulas.
-    ap(ret, '  <fileVersion appName="xl" lastEdited="4" />');
+    ap(ret, '  <fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="9303" />'); -- Older Excel version has lastEdited="4"
 
     ap(ret, '<sheets>'); -- {{{
 
@@ -590,7 +590,7 @@ create or replace package body xlsx_writer as -- {{{
 
 --  This line obviously necessary to prevent «has changed» message when xlsx
 --  is closed and contains formulas.
-    ap(ret, '<calcPr calcId="125725" />');
+    ap(ret, '<calcPr calcId="145621" />'); -- Older Excel Version: calcId="125725"
 
 --  ap(ret, '<calcPr calcOnSave="0" />');
 

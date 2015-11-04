@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">
+  <sheetData>
+    <row r="1">
+      <c r="A1" s="0">
+        <v>1</v>
+      </c>
+    </row>
+    <row r="2">
+      <c r="A2" s="0">
+        <v>1</v>
+      </c>
+    </row>
+    <row r="3">
+      <c r="A3" s="0">
+        <f>SUM(A1:A2)</f>
+        <v>2</v>
+      </c>
+    </row>
+    <row r="4">
+      <c r="A4" s="0">
+        <f>SUM(A2:A3)</f>
+        <v>3</v>
+      </c>
+    </row>
+    <row r="5">
+      <c r="A5" s="0">
+        <f>SUM(A3:A4)</f>
+        <v>5</v>
+      </c>
+    </row>
+    <row r="6">
+      <c r="A6" s="0">
+        <f>SUM(A4:A5)</f>
+        <v>8</v>
+      </c>
+    </row>
+    <row r="7">
+      <c r="A7" s="0">
+        <f>SUM(A5:A6)</f>
+        <v>13</v>
+      </c>
+    </row>
+    <row r="8">
+      <c r="A8" s="0">
+        <f>SUM(A6:A7)</f>
+        <v>21</v>
+      </c>
+    </row>
+  </sheetData>
+  <pageMargins left="0.36000000000000004" right="0.2" top="1" bottom="1" header="0.5" footer="0.5" />
+  <pageSetup paperSize="9" scale="67" orientation="landscape" horizontalDpi="4294967292" verticalDpi="4294967292" />
+</worksheet>

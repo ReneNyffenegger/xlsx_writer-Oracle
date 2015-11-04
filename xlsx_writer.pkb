@@ -106,11 +106,13 @@ create or replace package body xlsx_writer as -- {{{
   function col_to_letter(c integer) return varchar2 is -- {{{
   begin
 
+    dbms_output.put(c || '  ');
+
     if c < 27 then
        return substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ', c, 1);
     end if;
 
-    raise_application_error(-20800, 'TODO: Implement me, col_to_letter for ' || c);
+    return col_to_letter(trunc((c-1)/26)) || col_to_letter(mod((c-1), 26)+1);
     
   end col_to_letter; -- }}}
 

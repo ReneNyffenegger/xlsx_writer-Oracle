@@ -8,5 +8,6 @@ create directory xlsx_writer_test_dir as '&test_out_dir';
 @02_fill_cells.plsql
 @03_cell_styles.plsql
 @04_formulas.plsql
+@05_many_columns.plsql
 
 drop   directory xlsx_writer_test_dir;

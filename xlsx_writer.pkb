@@ -13,7 +13,7 @@ create or replace package body xlsx_writer as -- {{{
     dbms_lob.createTemporary(ret, true);
     
     ap(ret,q'{<?xml version="1.0" encoding="utf-8"?>
-    }');
+}');
 
     return ret;
 

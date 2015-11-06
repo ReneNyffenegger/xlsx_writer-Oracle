@@ -13,4 +13,7 @@
   <si>
     <t xml:space="preserve">Underlined</t>
   </si>
+  <si>
+    <t xml:space="preserve">Date in dd.mm.yyyy format</t>
+  </si>
 </sst>

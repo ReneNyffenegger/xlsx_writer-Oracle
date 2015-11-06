@@ -164,7 +164,7 @@ create or replace package xlsx_writer as -- {{{
                                name_        in     varchar2) return integer;
 
   function add_cell_style     (xlsx         in out book_r,
-                               font_id             integer  ,--  := 0,
+                               font_id             integer  := 0,
                                fill_id             integer  := 0,
                                border_id           integer  := 0,
                                num_fmt_id          integer  := 0,
@@ -176,6 +176,9 @@ create or replace package xlsx_writer as -- {{{
   function add_num_fmt        (xlsx         in out book_r,
                                raw_                varchar2,
                                return_id           integer) return integer;
+
+  function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer; -- Date in «dd.mm.yyyy» format
+
 
   function add_font           (xlsx         in out book_r,
                                name                varchar2,
@@ -210,6 +213,13 @@ create or replace package xlsx_writer as -- {{{
                                text               varchar2 := null,
                                value_             number   := null,
                                formula            varchar2 := null);
+
+  procedure add_cell          (xlsx        in out book_r,
+                               sheet              integer,
+                               r                  integer,
+                               c                  integer,
+                               date_              date,
+                               style_id           integer  :=    0);
 
   procedure add_sheet_rel     (xlsx        in out book_r,
                                sheet              integer,

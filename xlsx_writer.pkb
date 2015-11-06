@@ -213,6 +213,25 @@ create or replace package body xlsx_writer as -- {{{
 
   end add_cell; -- }}}
 
+  procedure add_cell          (xlsx        in out book_r, -- {{{
+                               sheet              integer,
+                               r                  integer,
+                               c                  integer,
+                               date_              date,
+                               style_id           integer  :=    0) is
+  begin
+
+    null;
+
+    add_cell(xlsx         => xlsx,
+             sheet        => sheet,
+             r            => r,
+             c            => c,
+             style_id     => style_id,
+             value_       => date_ - date '1899-12-30');
+
+  end add_cell; -- }}}
+
   -- }}}
 
   -- {{{ Related to styles
@@ -261,7 +280,7 @@ create or replace package body xlsx_writer as -- {{{
   end add_border; -- }}}
 
   function add_cell_style  (xlsx       in out book_r, -- {{{
-                            font_id           integer  , -- := 0,
+                            font_id           integer  := 0,
                             fill_id           integer  := 0,
                             border_id         integer  := 0,
                             num_fmt_id        integer  := 0,
@@ -298,6 +317,12 @@ create or replace package body xlsx_writer as -- {{{
 
   end add_num_fmt; -- }}}
 
+  function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer is -- Date in «dd.mm.yyyy» format
+  begin
+
+    return 14;
+
+  end add_num_fmt_dd_mm_yyyy;
   
   -- }}}
 

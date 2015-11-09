@@ -239,4 +239,3 @@ create or replace package xlsx_writer as -- {{{
 end xlsx_writer; -- }}}
 /
 show errors
-

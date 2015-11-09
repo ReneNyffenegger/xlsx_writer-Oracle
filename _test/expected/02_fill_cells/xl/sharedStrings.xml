@@ -10,4 +10,7 @@
   <si>
     <t xml:space="preserve">baz</t>
   </si>
+  <si>
+    <t xml:space="preserve">&lt;&amp;></t>
+  </si>
 </sst>

@@ -205,8 +205,8 @@ create or replace package body xlsx_writer as -- {{{
        xlsx.shared_strings(xlsx.shared_strings.count).val := replace(
                                                              replace(
                                                              replace(text, '&', '&amp;'),
-                                                                           '>', '&lt;' ),
-                                                                           '<', '&gt;' );
+                                                                           '>', '&gt;' ),
+                                                                           '<', '&lt;' );
  
        xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id := xlsx.shared_strings.count-1;
     end if; -- }}}

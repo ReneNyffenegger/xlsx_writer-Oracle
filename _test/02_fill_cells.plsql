@@ -17,6 +17,7 @@ begin
   xlsx_writer.add_cell(workbook, sheet, 1, 1, text => 'foo'); 
   xlsx_writer.add_cell(workbook, sheet, 2, 2, text => 'bar'); 
   xlsx_writer.add_cell(workbook, sheet, 3, 3, text => 'baz'); 
+  xlsx_writer.add_cell(workbook, sheet, 4, 4, text => '<&>'); -- Will it be replaced with correct entities?
 
   xlsx_writer.add_cell(workbook, sheet, 1, 4, value_ => 42   ); 
   xlsx_writer.add_cell(workbook, sheet, 2, 4, value_ => 99.99); 

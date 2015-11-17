@@ -81,6 +81,16 @@ create or replace package body xlsx_writer as -- {{{
 
   end add_sheet_rel; -- }}}
 
+  procedure add_checkbox      (xlsx        in out book_r, -- {{{
+                               sheet              integer,
+                               r                  integer,
+                               c                  integer) is
+  begin
+
+    null;
+
+  end add_checkbox; -- }}}
+
   procedure add_media         (xlsx        in out book_r, -- {{{
                                b                  blob,
                                name_              varchar2) is
@@ -157,8 +167,6 @@ create or replace package body xlsx_writer as -- {{{
       if does_row_exist(xlsx, sheet, r) then
          raise_application_error(-20800, 'row ' || r || ' already exists');
       end if;
-
---    xlsx.sheets(sheet).rows_(r).cells  := new cell_t();
 
       xlsx.sheets(sheet).rows_(r).height := height;
 
@@ -389,9 +397,9 @@ create or replace package body xlsx_writer as -- {{{
 
         ap(ret, '>');
  
-        if xlsx.sheets(sheet).rows_(r).cells.count = 0 then
+/*      if xlsx.sheets(sheet).rows_(r).cells.count = 0 then
            raise_application_error(-20800, 'Row ' || r || ' does not contain any cells');
-        end if;
+        end if;*/
 
         c := xlsx.sheets(sheet).rows_(r).cells.first;
         while c is not null loop -- {{{
@@ -744,6 +752,7 @@ create or replace package body xlsx_writer as -- {{{
       ap(ret, '<Default Extension="png"  ContentType="image/png"                                                />');
       ap(ret, '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />');
 --    ap(ret, '<Default Extension="xml"  ContentType="application/xml"                                          />');
+--    ap(ret, '<Default Extension="vml"  ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing" />'); -- Needed for Drawings (of which check boxes are one)
 
       ap(ret, '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />');
 

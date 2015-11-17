@@ -106,8 +106,6 @@ create or replace package body xlsx_writer as -- {{{
   function col_to_letter(c integer) return varchar2 is -- {{{
   begin
 
-    dbms_output.put(c || '  ');
-
     if c < 27 then
        return substr('ABCDEFGHIJKLMNOPQRSTUVWXYZ', c, 1);
     end if;
@@ -858,6 +856,8 @@ create or replace package body xlsx_writer as -- {{{
 
     return xlsx_b;
 
+--exception when others then
+--   raise_application_error(-20800, 'xlsx_writer.create_xlsx, step: ' || step || ', ' || sqlerrm);
   end create_xlsx; -- }}}
 
   begin

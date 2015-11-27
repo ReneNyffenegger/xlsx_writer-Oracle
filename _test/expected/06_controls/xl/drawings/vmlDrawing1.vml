@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <v:shape type="#_x0000_t201" filled="f" fillcolor="window [65]" stroked="f" strokecolor="windowText [64]" o:insetmode="auto">
+    <v:textbox style="mso-direction-alt:auto" o:singleclick="f">
+      <div style="text-align:left">
+        <font face="Tahoma" size="160" color="auto">Check me</font>
+      </div>
+    </v:textbox>
+    <x:ClientData ObjectType="Checkbox">
+      <x:SizeWithCells />
+      <x:Anchor>2,0,1,0,2,103,1,17                                   || -- Bottom offset
+      </x:Anchor>
+      <x:AutoFill>False</x:AutoFill>
+      <x:AutoLine>False</x:AutoLine>
+      <x:TextVAlign>Center</x:TextVAlign>
+      <x:Checked>0</x:Checked>
+      <x:NoThreeD />
+    </x:ClientData>
+  </v:shape>
+  <v:shape type="#_x0000_t201" filled="f" fillcolor="window [65]" stroked="f" strokecolor="windowText [64]" o:insetmode="auto">
+    <v:textbox style="mso-direction-alt:auto" o:singleclick="f">
+      <div style="text-align:left">
+        <font face="Tahoma" size="160" color="auto">Uncheck me</font>
+      </div>
+    </v:textbox>
+    <x:ClientData ObjectType="Checkbox">
+      <x:SizeWithCells />
+      <x:Anchor>3,0,1,0,3,103,1,17                                   || -- Bottom offset
+      </x:Anchor>
+      <x:AutoFill>False</x:AutoFill>
+      <x:AutoLine>False</x:AutoLine>
+      <x:TextVAlign>Center</x:TextVAlign>
+      <x:Checked>1</x:Checked>
+      <x:NoThreeD />
+    </x:ClientData>
+  </v:shape>
+</xml>

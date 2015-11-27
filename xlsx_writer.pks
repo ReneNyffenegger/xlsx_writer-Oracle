@@ -103,11 +103,28 @@ create or replace package xlsx_writer as -- {{{
 
   -- }}}
 
+  -- {{{ vml-Drawings
+
+  type checkbox_r           is record(text               varchar2(4000),
+                                      checked            boolean,
+                                      col_left           integer,
+                                      row_top            integer);
+
+  type checkbox_t           is table of checkbox_r;
+
+  type vml_drawing_r        is record(checkboxes          checkbox_t);
+
+  type vml_drawing_t        is table of vml_drawing_r;
+
+  -- }}}
+
   -- {{{ Sheet
-  type sheet_r              is record(col_widths col_width_t,
-                                      name_      varchar2(100),
-                                      rows_      row_t,
-                                      sheet_rels sheet_rel_t);
+  type sheet_r              is record(col_widths   col_width_t,
+                                      name_        varchar2(100),
+                                      rows_        row_t,
+                                      sheet_rels   sheet_rel_t,
+                                      vml_drawings vml_drawing_t -- Can there be multiple drawings per sheet? (ASSMPT_01)?
+                               );
 
   type sheet_t              is table of sheet_r;
 
@@ -141,18 +158,21 @@ create or replace package xlsx_writer as -- {{{
 
   -- }}}
 
+
   -- {{{ The book!
 
-  type book_r               is record(sheets              sheet_t,
-                                      cell_styles         cell_style_t,
-                                      borders             border_t,
-                                      fonts               font_t,
-                                      fills               fill_t,
-                                      num_fmts            num_fmt_t,
-                                      shared_strings      shared_string_t,
-                                      medias              media_t,
-                                      calc_chain_elems    calc_chain_elem_t,
-                                      drawings            drawing_t);
+  type book_r               is record(sheets                   sheet_t,
+                                      cell_styles              cell_style_t,
+                                      borders                  border_t,
+                                      fonts                    font_t,
+                                      fills                    fill_t,
+                                      num_fmts                 num_fmt_t,
+                                      shared_strings           shared_string_t,
+                                      medias                   media_t,
+                                      calc_chain_elems         calc_chain_elem_t,
+                                      drawings                 drawing_t,
+                                      content_type_vmlDrawing  boolean
+                                      );
 
   -- }}}
 
@@ -231,6 +251,14 @@ create or replace package xlsx_writer as -- {{{
 
   procedure add_drawing       (xlsx        in out book_r,
                                raw_               varchar2);
+
+  procedure add_checkbox      (xlsx        in out book_r,
+                               sheet              integer,
+                               col_left           integer,
+                               row_top            integer,
+                               text               varchar2 := null,
+                               checked            boolean  := false);
+                          
 
   function create_xlsx        (xlsx        in out book_r) return blob;
 

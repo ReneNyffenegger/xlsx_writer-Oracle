@@ -35,17 +35,18 @@ create or replace package body xlsx_writer as -- {{{
     ret book_r;
   begin
 
-    ret.sheets               := new sheet_t           ();
+    ret.sheets                   := new sheet_t           ();
 
-    ret.cell_styles          := new cell_style_t      ();
-    ret.borders              := new border_t          ();
-    ret.fonts                := new font_t            ();
-    ret.fills                := new fill_t            ();
-    ret.num_fmts             := new num_fmt_t         ();
-    ret.shared_strings       := new shared_string_t   ();
-    ret.medias               := new media_t           ();
-    ret.calc_chain_elems     := new calc_chain_elem_t ();
-    ret.drawings             := new drawing_t         ();
+    ret.cell_styles              := new cell_style_t      ();
+    ret.borders                  := new border_t          ();
+    ret.fonts                    := new font_t            ();
+    ret.fills                    := new fill_t            ();
+    ret.num_fmts                 := new num_fmt_t         ();
+    ret.shared_strings           := new shared_string_t   ();
+    ret.medias                   := new media_t           ();
+    ret.calc_chain_elems         := new calc_chain_elem_t ();
+    ret.drawings                 := new drawing_t         ();
+    ret.content_type_vmlDrawing  := false;
 
     return ret;
 
@@ -75,21 +76,10 @@ create or replace package body xlsx_writer as -- {{{
   is
   begin
 
-
     xlsx.sheets(sheet).sheet_rels.extend;
     xlsx.sheets(sheet).sheet_rels(xlsx.sheets(sheet).sheet_rels.count). raw_ := raw_;
 
   end add_sheet_rel; -- }}}
-
-  procedure add_checkbox      (xlsx        in out book_r, -- {{{
-                               sheet              integer,
-                               r                  integer,
-                               c                  integer) is
-  begin
-
-    null;
-
-  end add_checkbox; -- }}}
 
   procedure add_media         (xlsx        in out book_r, -- {{{
                                b                  blob,
@@ -110,6 +100,43 @@ create or replace package body xlsx_writer as -- {{{
     xlsx.drawings.extend;
     xlsx.drawings(xlsx.drawings.count).raw_ := raw_;
   end add_drawing; -- }}}
+
+  procedure add_checkbox      (xlsx        in out book_r, -- {{{
+                               sheet              integer,
+                               col_left           integer,
+                               row_top            integer,
+                               text               varchar2 := null,
+                               checked            boolean  := false) is
+  begin
+
+--  TODO hier weiter machen: die checkbox in die xlsx.vml_drawings einfügen.
+
+    if xlsx.sheets(sheet).vml_drawings is null then
+       xlsx.sheets(sheet).vml_drawings := new vml_drawing_t();
+
+       xlsx.sheets(sheet).vml_drawings.extend;
+
+    -- Assumption ASSMPT_01: at most ONE vml drawing per sheet.
+    -- index set to 1.
+       xlsx.sheets(sheet).vml_drawings(1).checkboxes := new checkbox_t();
+    end if;
+
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes.extend;
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes(
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes.count).col_left := col_left;
+
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes(
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes.count).row_top  := row_top;
+
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes(
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes.count).text     := text;
+
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes(
+    xlsx.sheets(sheet).vml_drawings(1).checkboxes.count).checked  := checked;
+
+    xlsx.content_type_vmlDrawing := true;
+
+  end add_checkbox; -- }}}
 
   -- {{{ Rows and Columns
 
@@ -226,8 +253,6 @@ create or replace package body xlsx_writer as -- {{{
                                date_              date,
                                style_id           integer  :=    0) is
   begin
-
-    null;
 
     add_cell(xlsx         => xlsx,
              sheet        => sheet,
@@ -449,6 +474,10 @@ create or replace package body xlsx_writer as -- {{{
     for d in 1 .. xlsx.drawings.count loop 
       ap(ret, '<drawing r:id="rId' || d || '" /> ');
     end loop;
+
+    if xlsx.sheets(sheet).vml_drawings is not null then
+       ap(ret, '<legacyDrawing r:id="rel_vml_drawing_' || sheet || '" />');
+    end if;
 
     ap(ret, '</worksheet>');
 
@@ -735,6 +764,14 @@ create or replace package body xlsx_writer as -- {{{
 --  end if;
 
 
+    if xlsx.sheets(sheet).vml_drawings is not null then
+       if ret is null then
+          ret := start_xml_blob;
+          ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+       end if;
+       ap(ret, '<Relationship Id="rel_vml_drawing_' || sheet ||  '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" Target="../drawings/vmlDrawing' || sheet || '.vml" />');
+    end if;
+
     if ret is not null then
        ap(ret, '</Relationships>');
     end if;
@@ -752,7 +789,10 @@ create or replace package body xlsx_writer as -- {{{
       ap(ret, '<Default Extension="png"  ContentType="image/png"                                                />');
       ap(ret, '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />');
 --    ap(ret, '<Default Extension="xml"  ContentType="application/xml"                                          />');
---    ap(ret, '<Default Extension="vml"  ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing" />'); -- Needed for Drawings (of which check boxes are one)
+
+      if xlsx.content_type_vmlDrawing then
+      ap(ret, '<Default Extension="vml"  ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing" />'); -- Needed for Drawings (of which check boxes are one)
+      end if;
 
       ap(ret, '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />');
 
@@ -795,6 +835,61 @@ create or replace package body xlsx_writer as -- {{{
 
   end xl_calcChain; -- }}}
 
+  function vml_drawing(v vml_drawing_r) return blob is -- {{{
+    ret blob := start_xml_blob;
+
+  begin
+
+    ap(ret, '<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">');
+
+    for cb in 1 .. v.checkboxes.count loop
+
+      ap(ret, '<v:shape
+         type="#_x0000_t201" 
+         filled="f"
+         fillcolor="window [65]"
+         stroked="f" 
+         strokecolor="windowText [64]"
+         o:insetmode="auto"
+       >');
+
+      ap(ret, '<v:textbox style="mso-direction-alt:auto" o:singleclick="f">
+      <div style="text-align:left">
+        <font face="Tahoma" size="160" color="auto">' || v.checkboxes(cb).text || '</font>
+      </div>
+    </v:textbox>');
+
+    ap(ret, '<x:ClientData ObjectType="Checkbox">
+      <x:SizeWithCells />
+      <x:Anchor>' ||
+        (v.checkboxes(cb).col_left -1) || ',' || -- Left column
+        '0,'                                  || -- Left offset
+        (v.checkboxes(cb).row_top  -1) || ',' || -- Top row
+        '0,'                                  || -- Top offset
+        (v.checkboxes(cb).col_left -1) || ',' || -- Right column
+        '103,'                                || -- Right Offset
+        (v.checkboxes(cb).row_top  -1) || ',' || -- Bottom row
+        '17                                   || -- Bottom offset
+      </x:Anchor> 
+      <x:AutoFill>False</x:AutoFill>
+      <x:AutoLine>False</x:AutoLine>
+      <x:TextVAlign>Center</x:TextVAlign>
+      <x:Checked>' || case when v.checkboxes(cb).checked then 1 else 0 end || '</x:Checked>
+      <x:NoThreeD />
+    </x:ClientData>');
+
+
+      ap(ret, '</v:shape>');
+
+    end loop;
+
+
+    ap(ret, '</xml>');
+
+    return ret;
+
+  end vml_drawing; -- }}}
+
   -- }}}
 
   function create_xlsx(xlsx in out book_r) return blob is -- {{{
@@ -833,7 +928,16 @@ create or replace package body xlsx_writer as -- {{{
 
 
     for s in 1 .. xlsx.sheets.count loop
-         zipper.addFile(xlsx_b, 'xl/worksheets/sheet' || s || '.xml', xl_worksheets_sheet       (xlsx, s));
+        zipper.addFile(xlsx_b, 'xl/worksheets/sheet' || s || '.xml', xl_worksheets_sheet       (xlsx, s));
+
+        if xlsx.sheets(s).vml_drawings is not null then
+
+        -- Assumption ASSMPT_01: at most ONE vml drawing per sheet.
+
+           add_blob_to_zip(xlsx_b, 'xl/drawings/vmlDrawing' || s || '.vml', vml_drawing(xlsx.sheets(s).vml_drawings(1)));
+
+        end if;
+
     end loop;
 
 

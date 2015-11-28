@@ -14,6 +14,27 @@
     <t xml:space="preserve">Underlined</t>
   </si>
   <si>
-    <t xml:space="preserve">Date in dd.mm.yyyy format</t>
+    <t xml:space="preserve">Date in mm-dd-yy</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 12345.678 in "0"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 12345.678 in "0.00"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 12345.678 in "#.##0"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 12345.678 in "#.##0.00"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 0.1783 in "0%"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 0.1783 in "0.00%"</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Number 21/24+13/24/60+48/24/60/60 in "h:mm:ss"</t>
   </si>
 </sst>

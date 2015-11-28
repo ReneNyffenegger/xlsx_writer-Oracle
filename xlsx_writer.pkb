@@ -348,12 +348,18 @@ create or replace package body xlsx_writer as -- {{{
 
   end add_num_fmt; -- }}}
 
-  function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer is -- Date in «dd.mm.yyyy» format
+  /*
+  function add_num_fmt_0          (xlsx    in out book_r)  return integer is -- {{{ "0"
+  begin
+    return 1;
+  end add_num_fmt_0; -- }}}
+  function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer is -- {{{ Date in «dd.mm.yyyy» format
   begin
 
     return 14;
 
-  end add_num_fmt_dd_mm_yyyy;
+  end add_num_fmt_dd_mm_yyyy; -- }}}
+  */
   
   -- }}}
 

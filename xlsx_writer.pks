@@ -1,6 +1,40 @@
 create or replace package xlsx_writer as -- {{{
 -- vi: foldmarker={{{,}}}
 
+  "0"                          constant integer :=  1;
+  "0.00"                       constant integer :=  2;
+  "#.##0"                      constant integer :=  3;
+  "#.##0.00"                   constant integer :=  4;
+
+  "0%"                         constant integer :=  9;
+  "0.00%"                      constant integer := 10;
+  "0.00E+00"                   constant integer := 11;
+  "# ?/?"                      constant integer := 12;
+  "# ??/??"                    constant integer := 13;
+  "mm-dd-yy"                   constant integer := 14;
+--"dd_mm_yyyy"                 constant integer := 14;
+  "d-mmm-yy"                   constant integer := 15;
+  "d-mmm"                      constant integer := 16;
+  "mmm-yy"                     constant integer := 17;
+  "h:mm AM/PM"                 constant integer := 18;
+  "h:mm:ss AM/PM"              constant integer := 19;
+  "h:mm"                       constant integer := 20;
+  "h:mm:ss"                    constant integer := 21;
+  "m/d/yy h:mm"                constant integer := 22;
+
+  "#,##0 ;(#,##0)"             constant integer := 37;
+  "#,##0 ;[Red](#,##0)"        constant integer := 38;
+  "#,##0.00;(#,##0.00)"        constant integer := 39;
+  "#,##0.00;[Red](#,##0.00)"   constant integer := 40;
+
+  "mm:ss"                      constant integer := 45;
+  "[h]:mm:ss"                  constant integer := 46;
+  "mmss.0"                     constant integer := 47;
+  "##0.0E+0"                   constant integer := 48;
+  "@"                          constant integer := 49;
+
+
+
   -- {{{ Types
 
   -- {{{ Related to styles
@@ -197,7 +231,8 @@ create or replace package xlsx_writer as -- {{{
                                raw_                varchar2,
                                return_id           integer) return integer;
 
-  function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer; -- Date in «dd.mm.yyyy» format
+--function add_num_fmt_0          (xlsx    in out book_r)  return integer;
+--function add_num_fmt_dd_mm_yyyy (xlsx    in out book_r)  return integer; -- Date in «dd.mm.yyyy» format
 
 
   function add_font           (xlsx         in out book_r,

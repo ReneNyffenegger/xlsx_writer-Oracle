@@ -2,7 +2,7 @@
 
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">
   <cols>
-    <col min="1" max="1" width="28" customWidth="1" />
+    <col min="1" max="1" width="45" customWidth="1" />
     <col min="2" max="2" width="14" customWidth="1" />
   </cols>
   <sheetData>
@@ -32,6 +32,62 @@
       </c>
       <c r="B5" s="5">
         <v>42160</v>
+      </c>
+    </row>
+    <row r="6">
+      <c r="A6" s="0" t="s">
+        <v>5</v>
+      </c>
+      <c r="B6" s="6">
+        <v>12345.678</v>
+      </c>
+    </row>
+    <row r="7">
+      <c r="A7" s="0" t="s">
+        <v>6</v>
+      </c>
+      <c r="B7" s="7">
+        <v>12345.678</v>
+      </c>
+    </row>
+    <row r="8">
+      <c r="A8" s="0" t="s">
+        <v>7</v>
+      </c>
+      <c r="B8" s="8">
+        <v>12345.678</v>
+      </c>
+    </row>
+    <row r="9">
+      <c r="A9" s="0" t="s">
+        <v>8</v>
+      </c>
+      <c r="B9" s="9">
+        <v>12345.678</v>
+      </c>
+    </row>
+    <row r="10">
+      <c r="A10" s="0" t="s">
+        <v>9</v>
+      </c>
+      <c r="B10" s="10">
+        <v>.1783</v>
+      </c>
+    </row>
+    <row r="11">
+      <c r="A11" s="0" t="s">
+        <v>10</v>
+      </c>
+      <c r="B11" s="11">
+        <v>.1783</v>
+      </c>
+    </row>
+    <row r="12">
+      <c r="A12" s="0" t="s">
+        <v>11</v>
+      </c>
+      <c r="B12" s="12">
+        <v>.8845833333333333333333333333333333333334</v>
       </c>
     </row>
   </sheetData>

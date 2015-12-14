@@ -11,8 +11,7 @@ create or replace package xlsx_writer as -- {{{
   "0.00E+00"                   constant integer := 11;
   "# ?/?"                      constant integer := 12;
   "# ??/??"                    constant integer := 13;
-  "mm-dd-yy"                   constant integer := 14;
---"dd_mm_yyyy"                 constant integer := 14;
+  "mm-dd-yy"                   constant integer := 14; -- Note, for a reason, this is displayed as «dd.mm.yyyy», at least with my «locale» settings.
   "d-mmm-yy"                   constant integer := 15;
   "d-mmm"                      constant integer := 16;
   "mmm-yy"                     constant integer := 17;

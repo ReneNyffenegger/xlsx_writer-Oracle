@@ -245,6 +245,11 @@ create or replace package xlsx_writer as -- {{{
   function add_fill           (xlsx         in out book_r,
                                raw_                varchar2) return integer;
           
+  procedure col_width         (xlsx         in out book_r,
+                               sheet              integer,
+                               col                integer,
+                               width              number
+                               );
 
   procedure col_width         (xlsx         in out book_r,
                                sheet              integer,

@@ -153,6 +153,18 @@ create or replace package body xlsx_writer as -- {{{
 
   procedure col_width         (xlsx    in out book_r,-- {{{
                                sheet          integer,
+                               col            integer,
+                               width          number
+                               ) is
+  begin
+
+    col_width(xlsx, sheet, col, col, width);
+
+
+  end col_width; -- }}}
+
+  procedure col_width         (xlsx    in out book_r,-- {{{
+                               sheet          integer,
                                start_col      integer,
                                end_col        integer,
                                width          number

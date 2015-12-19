@@ -36,8 +36,8 @@ begin
   font_italic  := xlsx_writer.add_font      (workbook, 'Georgia'    , 12, i => true);
   font_underl  := xlsx_writer.add_font      (workbook, 'Verdana'    , 12, u => true);
 
-  xlsx_writer.col_width(workbook, sheet, 1, 1, 45);
-  xlsx_writer.col_width(workbook, sheet, 2, 2, 14);
+  xlsx_writer.col_width(workbook, sheet, 1   , 45); -- col_width, variant one
+  xlsx_writer.col_width(workbook, sheet, 2, 2, 14); -- col_widht, variant two
 
   cs_courier   := xlsx_writer.add_cell_style(workbook, font_id => font_courier);
   cs_bold      := xlsx_writer.add_cell_style(workbook, font_id => font_bold);

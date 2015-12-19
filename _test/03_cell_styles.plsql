@@ -17,7 +17,6 @@ declare
   font_underl             integer;
   cs_underl               integer;
 
-
  "mm-dd-yy"               integer;
  "0"                      integer;
  "0.00"                   integer;
@@ -26,6 +25,10 @@ declare
  "0%"                     integer;
  "0.00%"                  integer;
  "h:mm:ss"                integer;
+
+  cs_top_wrapped          integer;
+  cs_center_wrapped       integer;
+  cs_bottom_wrapped       integer;
 
 begin
 
@@ -44,6 +47,7 @@ begin
   cs_italic    := xlsx_writer.add_cell_style(workbook, font_id => font_italic);
   cs_underl    := xlsx_writer.add_cell_style(workbook, font_id => font_underl);
 
+
  "mm-dd-yy"          := xlsx_writer.add_cell_style(workbook, num_fmt_id => xlsx_writer."mm-dd-yy");
  "0"                 := xlsx_writer.add_cell_style(workbook, num_fmt_id => xlsx_writer."0"       );
  "0.00"              := xlsx_writer.add_cell_style(workbook, num_fmt_id => xlsx_writer."0.00"    );
@@ -53,6 +57,9 @@ begin
  "0.00%"             := xlsx_writer.add_cell_style(workbook, num_fmt_id => xlsx_writer."0.00%"   );
  "h:mm:ss"           := xlsx_writer.add_cell_style(workbook, num_fmt_id => xlsx_writer."h:mm:ss" );
 
+  cs_top_wrapped     := xlsx_writer.add_cell_style(workbook, vertical_alignment => 'top'   , wrap_text => true);
+  cs_center_wrapped  := xlsx_writer.add_cell_style(workbook, vertical_alignment => 'center', wrap_text => true);
+  cs_bottom_wrapped  := xlsx_writer.add_cell_style(workbook, vertical_alignment => 'bottom', wrap_text => true);
 
   xlsx_writer.add_cell(workbook, sheet,  1, 1, style_id => cs_courier, text => 'Courier'   ); 
   xlsx_writer.add_cell(workbook, sheet,  2, 1, style_id => cs_bold   , text => 'Bold'      ); 
@@ -82,6 +89,15 @@ begin
 
   xlsx_writer.add_cell(workbook, sheet, 12, 1, text => 'Number 21/24+13/24/60+48/24/60/60 in "h:mm:ss"'); 
   xlsx_writer.add_cell(workbook, sheet, 12, 2, style_id => "h:mm:ss", value_ => 21/24+13/24/60+48/24/60/60); 
+
+  xlsx_writer.add_row(workbook , sheet, 13, 80);
+  xlsx_writer.add_cell(workbook, sheet, 13, 1, style_id => cs_top_wrapped, text => 'This is quite a long text that is supposed to demonstrate the effect of using vertical_alignment=>''top'' and text_wrap=>true'); 
+
+  xlsx_writer.add_row(workbook , sheet, 14, 80);
+  xlsx_writer.add_cell(workbook, sheet, 14, 1, style_id => cs_center_wrapped, text => 'This is quite a long text that is supposed to demonstrate the effect of using vertical_alignment=>''center'' and text_wrap=>true'); 
+
+  xlsx_writer.add_row(workbook , sheet, 15, 80);
+  xlsx_writer.add_cell(workbook, sheet, 15, 1, style_id => cs_bottom_wrapped, text => 'This is quite a long text that is supposed to demonstrate the effect of using vertical_alignment=>''bottom'' and text_wrap=>true'); 
 
   xlsx     := xlsx_writer.create_xlsx(workbook);
 

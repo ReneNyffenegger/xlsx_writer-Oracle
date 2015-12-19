@@ -322,22 +322,26 @@ create or replace package body xlsx_writer as -- {{{
     return xlsx.borders.count; -- Return count instead of count-1 because the empty border is default
   end add_border; -- }}}
 
-  function add_cell_style  (xlsx       in out book_r, -- {{{
-                            font_id           integer  := 0,
-                            fill_id           integer  := 0,
-                            border_id         integer  := 0,
-                            num_fmt_id        integer  := 0,
-                            raw_within        varchar2 := null) return integer is
+  function add_cell_style  (xlsx         in out book_r, -- {{{
+                            font_id             integer  := 0,
+                            fill_id             integer  := 0,
+                            border_id           integer  := 0,
+                            num_fmt_id          integer  := 0,
+                            vertical_alignment  varchar2 := null,
+                            wrap_text           boolean  := null
+                         -- raw_within          varchar2 := null
+                          ) return integer is
 
     rec cell_style_r;
   begin
 
-    rec.font_id    := font_id;
-    rec.fill_id    := fill_id;
-    rec.border_id  := border_id;
-    rec.num_fmt_id := num_fmt_id;
-    rec.raw_within := raw_within;
-
+    rec.font_id            := font_id;
+    rec.fill_id            := fill_id;
+    rec.border_id          := border_id;
+    rec.num_fmt_id         := num_fmt_id;
+--  rec.raw_within         := raw_within;
+    rec.vertical_alignment := vertical_alignment;
+    rec.wrap_text          := wrap_text;
 
     xlsx.cell_styles.extend;
     xlsx.cell_styles(xlsx.cell_styles.count) := rec;
@@ -505,6 +509,8 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_styles(xlsx in book_r) return blob is -- {{{
     ret blob;
+
+    tag_alignment boolean := false;
   begin
 
     ret := start_xml_blob;
@@ -601,9 +607,27 @@ create or replace package body xlsx_writer as -- {{{
         add_attr(ret, 'borderId', xlsx.cell_styles(c).border_id );
         ap(ret, '>');
 
-        if xlsx.cell_styles(c).raw_within is not null then
-           ap(ret, xlsx.cell_styles(c).raw_within);
+        if xlsx.cell_styles(c).vertical_alignment is not null then
+           tag_alignment := true;
+           ap(ret, '<alignment vertical="' || xlsx.cell_styles(c).vertical_alignment || '"');
         end if;
+
+        if xlsx.cell_styles(c).wrap_text is not null then
+           if not tag_alignment then
+              tag_alignment := true;
+              ap(ret, '<alignment');
+            end if;
+
+            ap(ret, ' wrapText="' || case when xlsx.cell_styles(c).wrap_text then '1' else '0' end || '"');
+        end if;
+
+        if tag_alignment then
+           ap(ret, '/>');
+        end if;
+
+ --     if xlsx.cell_styles(c).raw_within is not null then
+ --        ap(ret, xlsx.cell_styles(c).raw_within);
+ --     end if;
 
         ap(ret, '</xf>');
 

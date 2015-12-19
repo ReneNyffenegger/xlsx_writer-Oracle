@@ -76,11 +76,14 @@ create or replace package xlsx_writer as -- {{{
 
   -- {{{ Cell Styles
 
-  type cell_style_r         is record(font_id    integer,
-                                      fill_id    integer,
-                                      border_id  integer,
-                                      num_fmt_id integer,
-                                      raw_within varchar2(200));
+  type cell_style_r         is record(font_id             integer,
+                                      fill_id             integer,
+                                      border_id           integer,
+                                      num_fmt_id          integer,
+                                      vertical_alignment  varchar2(10),
+                                      wrap_text           boolean
+                                  --  raw_within varchar2(200)
+                                    );
 
   type cell_style_t         is table of cell_style_r;
 
@@ -221,7 +224,10 @@ create or replace package xlsx_writer as -- {{{
                                fill_id             integer  := 0,
                                border_id           integer  := 0,
                                num_fmt_id          integer  := 0,
-                               raw_within          varchar2 := null) return integer;
+                               vertical_alignment  varchar2 := null,
+                               wrap_text           boolean  := null
+                           --  raw_within          varchar2 := null
+                            ) return integer;
 
   function add_border         (xlsx         in out book_r,
                                raw_                varchar2) return integer;

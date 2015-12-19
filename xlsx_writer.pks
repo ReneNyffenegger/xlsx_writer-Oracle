@@ -155,11 +155,13 @@ create or replace package xlsx_writer as -- {{{
   -- }}}
 
   -- {{{ Sheet
-  type sheet_r              is record(col_widths   col_width_t,
-                                      name_        varchar2(100),
-                                      rows_        row_t,
-                                      sheet_rels   sheet_rel_t,
-                                      vml_drawings vml_drawing_t -- Can there be multiple drawings per sheet? (ASSMPT_01)?
+  type sheet_r              is record(col_widths     col_width_t,
+                                      name_          varchar2(100),
+                                      rows_          row_t,
+                                      split_x        integer,
+                                      split_y        integer,
+                                      sheet_rels     sheet_rel_t,
+                                      vml_drawings   vml_drawing_t -- Can there be multiple drawings per sheet? (ASSMPT_01)?
                                );
 
   type sheet_t              is table of sheet_r;
@@ -269,6 +271,12 @@ create or replace package xlsx_writer as -- {{{
                                sheet              integer,
                                r                  integer,
                                height             number := null);
+
+  procedure freeze_sheet      (xlsx        in out book_r,
+                               sheet       in     integer,
+                               split_x     in     integer := null,
+                               split_y     in     integer := null);
+                             
 
   procedure add_cell          (xlsx        in out book_r,
                                sheet              integer,

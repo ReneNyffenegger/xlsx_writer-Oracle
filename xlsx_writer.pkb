@@ -70,6 +70,17 @@ create or replace package body xlsx_writer as -- {{{
 
   end add_sheet; -- }}}
 
+  procedure freeze_sheet      (xlsx        in out book_r, -- {{{
+                               sheet       in     integer,
+                               split_x     in     integer := null,
+                               split_y     in     integer := null) is
+  begin
+
+    xlsx.sheets(sheet).split_x := split_x;
+    xlsx.sheets(sheet).split_y := split_y;
+
+  end freeze_sheet; -- }}}
+
   procedure add_sheet_rel     (xlsx        in out book_r, -- {{{
                                sheet              integer,
                                raw_               varchar2)
@@ -404,6 +415,32 @@ create or replace package body xlsx_writer as -- {{{
 
     ap(ret, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
 
+
+    if xlsx.sheets(sheet).split_x is not null or -- {{{
+       xlsx.sheets(sheet).split_y is not null then
+
+       ap(ret, '<sheetViews>');        
+       ap(ret, '<sheetView workbookViewId="0">');        
+
+       ap(ret, '<pane');
+
+       if xlsx.sheets(sheet).split_x is not null then
+          add_attr(ret, 'xSplit', xlsx.sheets(sheet).split_x);
+       end if; 
+
+       if xlsx.sheets(sheet).split_y is not null then
+          add_attr(ret, 'ySplit', xlsx.sheets(sheet).split_y);
+       end if; 
+
+       add_attr(ret, 'topLeftCell', col_to_letter(xlsx.sheets(sheet).split_x + 1) || (xlsx.sheets(sheet).split_y + 1));
+       ap(ret, ' state="frozen"/>');
+
+       ap(ret, '<selection pane="bottomLeft" activeCell="B6" sqref="B6" />');
+
+       ap(ret, '</sheetView>');        
+       ap(ret, '</sheetViews>');        
+
+    end if; -- }}}
 
     if xlsx.sheets(sheet).col_widths.count > 0 then -- {{{
       ap(ret, '<cols>');

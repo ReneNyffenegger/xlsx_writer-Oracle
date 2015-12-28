@@ -35,7 +35,6 @@ begin
   xlsx_writer.freeze_sheet(workbook, sheet_1, c_x_split, c_y_split);
 
   -- }
-
   -- { Second sheet
   sheet_2  := xlsx_writer.add_sheet  (workbook, 'Name of sheet two');
 
@@ -70,6 +69,7 @@ begin
   xlsx_writer.freeze_sheet(workbook, sheet_3, split_x => 1);
 
   -- }
+
   xlsx     := xlsx_writer.create_xlsx(workbook);
 
   blob_wrapper.to_file('XLSX_WRITER_TEST_DIR', '07_freeze_sheet.xlsx', xlsx);

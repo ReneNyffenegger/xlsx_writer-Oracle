@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="24" uniqueCount="24">
+  <si>
+    <t xml:space="preserve">Foo</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Bar</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Baz</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Foo</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Bar</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Baz</t>
+  </si>
 </sst>

@@ -432,10 +432,14 @@ create or replace package body xlsx_writer as -- {{{
           add_attr(ret, 'ySplit', xlsx.sheets(sheet).split_y);
        end if; 
 
-       add_attr(ret, 'topLeftCell', col_to_letter(xlsx.sheets(sheet).split_x + 1) || (xlsx.sheets(sheet).split_y + 1));
+       add_attr(ret, 'topLeftCell', col_to_letter(nvl(xlsx.sheets(sheet).split_x, 1) + 1) || (nvl(xlsx.sheets(sheet).split_y, 1) + 1));
        ap(ret, ' state="frozen"/>');
 
-       ap(ret, '<selection pane="bottomLeft" activeCell="B6" sqref="B6" />');
+       if xlsx.sheets(sheet).split_y is not null then
+          ap(ret, '<selection pane="bottomLeft" activeCell="B6" sqref="B6" />');
+       else
+          ap(ret, '<selection pane="topRight" activeCell="B6" sqref="B6" />');
+       end if;
 
        ap(ret, '</sheetView>');        
        ap(ret, '</sheetViews>');        

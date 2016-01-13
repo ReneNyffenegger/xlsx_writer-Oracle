@@ -6,4 +6,4 @@ Creating Excel workbooks (xlsx) with PL/SQL
 
 [About Office Open XML](https://github.com/ReneNyffenegger/about-Office-Open-XML).
 
-[My Homepage](http://renenyffenegger.ch/Oracle/Libraries/xlsx-writer.html).
+[Examples on my homepage](http://renenyffenegger.ch/Oracle/Libraries/xlsx-writer.html).

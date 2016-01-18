@@ -317,6 +317,8 @@ create or replace package xlsx_writer as -- {{{
 
   function col_to_letter(c integer) return varchar2;
 
+  function sql_to_xlsx(sql_stmt varchar2) return blob;
+
 end xlsx_writer; -- }}}
 /
 show errors

@@ -1056,6 +1056,114 @@ create or replace package body xlsx_writer as -- {{{
 --   raise_application_error(-20800, 'xlsx_writer.create_xlsx, step: ' || step || ', ' || sqlerrm);
   end create_xlsx; -- }}}
 
+  function sql_to_xlsx(sql_stmt varchar2) return blob is -- {{{
+ -- {{{
+    workbook xlsx_writer.book_r;
+    sheet        integer;
+    cs_date      integer;
+
+    xlsx         blob;
+
+    cursor_             integer;
+    res_                integer;
+    column_count        integer;
+    column_value        varchar2(4000);
+    table_desc_         dbms_sql.desc_tab;
+    type column_t       is record(name varchar2(30), datatype char(1) /* N, D, C */);
+    type columns_t      is table of column_t;
+    column_  column_t;
+    columns_  columns_t := columns_t();
+ -- }}}
+
+    procedure column_names_and_types is -- {{{
+    begin
+  
+        for c in 1 .. column_count loop -- {{{
+  
+            column_.name         :=  table_desc_(c).col_name;
+  
+            column_.datatype     :=  case table_desc_(c).col_type 
+                                     when dbms_sql.number_type   then 'N'
+                                     when dbms_sql.date_type     then 'D'
+                                     when dbms_sql.varchar2_type then 'C'
+                                     else '??' -- does not fit into char(1), abort!
+                                     end;
+  
+            columns_.extend;
+            columns_(c) := column_;
+  
+        end loop; -- }}}
+  
+    end column_names_and_types; -- }}}
+    procedure header is -- {{{
+    begin
+
+      for c in 1 .. column_count loop -- {{{
+          add_cell(workbook, sheet, 1, c, text => columns_(c).name);
+
+          if columns_(c).datatype = 'D' then
+             col_width(workbook, sheet, c, 17);
+          end if;
+
+      end loop; -- }}}
+
+    end header; -- }}}
+    procedure result_set is -- {{{
+
+      cur_row integer := 1;
+    begin
+
+        loop -- {{{
+
+            exit when dbms_sql.fetch_rows(cursor_) = 0;
+
+            cur_row := 1 + cur_row;
+
+            for c in 1 .. column_count loop
+
+                dbms_sql.column_value(cursor_, c, column_value);
+
+                if     columns_(c).datatype = 'N' then
+                       add_cell(workbook, sheet, cur_row, c, value_ => column_value);
+
+                elsif  columns_(c).datatype = 'D' then
+                       add_cell(workbook, sheet, cur_row, c, date_  => column_value, style_id => cs_date);
+
+                elsif  columns_(c).datatype = 'C' then
+                       add_cell(workbook, sheet, cur_row, c, text   => column_value);
+                end if;
+
+            end loop;
+
+
+        end loop; -- }}}
+
+    end result_set; -- }}}
+
+  begin
+
+    workbook := xlsx_writer.start_book;
+    sheet    := xlsx_writer.add_sheet  (workbook, 'Result set');
+
+    cs_date := xlsx_writer.add_cell_style(workbook, num_fmt_id => "m/d/yy h:mm");
+
+    cursor_  := dbms_sql.open_cursor;
+    dbms_sql.parse(cursor_, sql_stmt, dbms_sql.native);
+    dbms_sql.describe_columns(/*in*/ cursor_, /*out*/ column_count, /*out*/ table_desc_);
+    for c in 1 .. column_count loop -- {
+        dbms_sql.define_column(cursor_, c, column_value, 4000);
+    end loop; -- }
+    res_ := dbms_sql.execute(cursor_);
+    column_names_and_types;
+    header;
+    result_set;
+
+    xlsx     := xlsx_writer.create_xlsx(workbook);
+
+    return xlsx;
+
+  end sql_to_xlsx; -- }}}
+
   begin
     dbms_session.set_nls('nls_numeric_characters', '''. ''');
 

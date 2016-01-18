@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="24" uniqueCount="24">
+  <si>
+    <t xml:space="preserve">COL_1</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_2</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_3</t>
+  </si>
+  <si>
+    <t xml:space="preserve">bar</t>
+  </si>
+  <si>
+    <t xml:space="preserve">baz</t>
+  </si>
+  <si>
+    <t xml:space="preserve">foo</t>
+  </si>
+</sst>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">
+  <cols>
+    <col min="3" max="3" width="17" customWidth="1" />
+  </cols>
+  <sheetData>
+    <row r="1">
+      <c r="A1" s="0" t="s">
+        <v>0</v>
+      </c>
+      <c r="B1" s="0" t="s">
+        <v>1</v>
+      </c>
+      <c r="C1" s="0" t="s">
+        <v>2</v>
+      </c>
+    </row>
+    <row r="2">
+      <c r="A2" s="0" t="s">
+        <v>3</v>
+      </c>
+      <c r="B2" s="0" />
+      <c r="C2" s="1">
+        <v>42381</v>
+      </c>
+    </row>
+    <row r="3">
+      <c r="A3" s="0" t="s">
+        <v>4</v>
+      </c>
+      <c r="B3" s="0">
+        <v>-108.2094</v>
+      </c>
+      <c r="C3" s="1" />
+    </row>
+    <row r="4">
+      <c r="A4" s="0" t="s">
+        <v>5</v>
+      </c>
+      <c r="B4" s="0">
+        <v>42</v>
+      </c>
+      <c r="C4" s="1">
+        <v>42380.7647106481481481481481481481481481</v>
+      </c>
+    </row>
+    <row r="5">
+      <c r="A5" s="0" />
+      <c r="B5" s="0">
+        <v>0</v>
+      </c>
+      <c r="C5" s="1">
+        <v>25569</v>
+      </c>
+    </row>
+  </sheetData>
+  <pageMargins left="0.36000000000000004" right="0.2" top="1" bottom="1" header="0.5" footer="0.5" />
+  <pageSetup paperSize="9" scale="67" orientation="landscape" horizontalDpi="4294967292" verticalDpi="4294967292" />
+</worksheet>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="24" uniqueCount="24">
+  <si>
+    <t xml:space="preserve">COL_001</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_004</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_010</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_019</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_030</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_050</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_100</t>
+  </si>
+  <si>
+    <t xml:space="preserve">COL_002</t>
+  </si>
+  <si>
+    <t xml:space="preserve">x</t>
+  </si>
+  <si>
+    <t xml:space="preserve">four</t>
+  </si>
+  <si>
+    <t xml:space="preserve">ten things</t>
+  </si>
+  <si>
+    <t xml:space="preserve">nineteen characters</t>
+  </si>
+  <si>
+    <t xml:space="preserve">abcdef ghijkl mno pqrst uvw xyz</t>
+  </si>
+  <si>
+    <t xml:space="preserve">Looking for a text consisting of fifty characters.</t>
+  </si>
+  <si>
+    <t xml:space="preserve">123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789!</t>
+  </si>
+  <si>
+    <t xml:space="preserve">12</t>
+  </si>
+</sst>

@@ -14,5 +14,6 @@ create directory xlsx_writer_test_dir as '&test_out_dir';
 @07_freeze_sheet.plsql
 
 @s2e_01.plsql
+@s2e_02.plsql
 
 drop   directory xlsx_writer_test_dir;

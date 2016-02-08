@@ -1069,7 +1069,7 @@ create or replace package body xlsx_writer as -- {{{
     column_count        integer;
     column_value        varchar2(4000);
     table_desc_         dbms_sql.desc_tab;
-    type column_t       is record(name varchar2(30), datatype char(1) /* N, D, C */);
+    type column_t       is record(name varchar2(30), datatype char(1) /* N, D, C */, max_characters number);
     type columns_t      is table of column_t;
     column_  column_t;
     columns_  columns_t := columns_t();
@@ -1086,6 +1086,7 @@ create or replace package body xlsx_writer as -- {{{
                                      when dbms_sql.number_type   then 'N'
                                      when dbms_sql.date_type     then 'D'
                                      when dbms_sql.varchar2_type then 'C'
+                                     when dbms_sql.char_type     then 'C'
                                      else '??' -- does not fit into char(1), abort!
                                      end;
   
@@ -1131,6 +1132,8 @@ create or replace package body xlsx_writer as -- {{{
 
                 elsif  columns_(c).datatype = 'C' then
                        add_cell(workbook, sheet, cur_row, c, text   => column_value);
+
+                       columns_(c).max_characters := greatest(nvl(columns_(c).max_characters, 0), nvl(length(column_value), 0));
                 end if;
 
             end loop;
@@ -1157,6 +1160,16 @@ create or replace package body xlsx_writer as -- {{{
     column_names_and_types;
     header;
     result_set;
+    for c in 1 .. column_count loop -- {
+
+        if columns_(c).datatype = 'C' then
+
+           if columns_(c).max_characters > 13 then
+               col_width(workbook, sheet, c, least(columns_(c).max_characters, 50) * 0.95);
+           end if;
+
+        end if;
+    end loop;
 
     xlsx     := xlsx_writer.create_xlsx(workbook);
 

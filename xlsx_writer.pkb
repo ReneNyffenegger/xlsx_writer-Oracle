@@ -58,7 +58,8 @@ create or replace package body xlsx_writer as -- {{{
     ret sheet_r;
   begin
 
-    ret.name_      := name_;
+ -- Sheetname must not contain any of : [ ]
+    ret.name_      := translate(name_, ':[]', '   ');
 
     ret.col_widths := new col_width_t();
     ret.sheet_rels := new sheet_rel_t();

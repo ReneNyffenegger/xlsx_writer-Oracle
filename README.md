@@ -9,3 +9,7 @@ Creating Excel workbooks (xlsx) with PL/SQL
 [Examples on my homepage](http://renenyffenegger.ch/Oracle/Libraries/xlsx-writer.html).
 
 Example for the procedure [sql_to_xlsx](http://renenyffenegger.blogspot.ch/2016/01/oracle-turning-select-statement-into.html) which turns an SQL statement into an excel sheet.
+
+# Licence
+
+xlsx writer is licenced under the **GNU General Public License v3.0**.

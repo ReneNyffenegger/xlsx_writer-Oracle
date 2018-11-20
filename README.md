@@ -2,6 +2,10 @@
 
 Creating Excel workbooks (xlsx) with PL/SQL
 
+# Dependencies
+
+The package needs `zipper` which can be found [here](https://github.com/ReneNyffenegger/oracle_scriptlets/tree/master/zipper).
+
 # Links
 
 [About Office Open XML](https://github.com/ReneNyffenegger/about-Office-Open-XML).

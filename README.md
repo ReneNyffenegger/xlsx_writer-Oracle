@@ -4,10 +4,10 @@ Creating Excel workbooks (xlsx) with PL/SQL
 
 # Dependencies
 
-The package needs `zipper` which can be found [here](https://github.com/ReneNyffenegger/oracle_scriptlets/tree/master/zipper).
+The package needs `zipper` which can be found [here](https://github.com/ReneNyffenegger/PL-SQL-pkg-zipper).
 
 The [tests](https://github.com/ReneNyffenegger/xlsx_writer-Oracle/tree/master/_test) require the
-[`blob_writer`](https://github.com/ReneNyffenegger/blob_wrapper-Oracle) package.
+[`blob_writer`](https://github.com/ReneNyffenegger/PL-SQL-pkg-blob_wrapper) package.
 
 # Links
 

@@ -4,8 +4,19 @@ create or replace package body xlsx_writer as -- {{{
 
   procedure ap (b in out blob, v in varchar2) is -- {{{
   begin
-    dbms_lob.append(b, utl_raw.cast_to_raw(v));
+    if  v is not null then 
+        dbms_lob.append(b, utl_raw.cast_to_raw(v));
+    end if;
   end ap; -- }}}
+
+  procedure aps (b in out blob, v1 in out varchar2, v2 in varchar2) is -- {{{
+  begin
+    if length(v1) + length(v2) > 4000 then
+       ap(b,v1);
+       v1 := null;
+    end if;   
+    v1 := v1 || v2;
+  end aps; -- }}}
 
   function start_xml_blob return blob is -- {{{
     ret blob;
@@ -25,6 +36,19 @@ create or replace package body xlsx_writer as -- {{{
   begin
     ap(b, ' ' || attr_name || '="' || attr_value || '"');
   end add_attr; -- }}}
+
+  procedure add_attrs(b          in out blob,
+                      v          in out varchar2, -- {{{
+                      attr_name         varchar2,
+                      attr_value        varchar2) is
+  begin
+    if length(v) + 1 + length(attr_name) + 1 + 1 + length(attr_value) + 1 > 4000 then
+       ap(b,v);
+       v := null;
+    end if;
+    v := v || ' ' || attr_name || '="' || attr_value || '"';
+  end add_attrs; -- }}}
+
 
   procedure warning(text varchar2) is -- {{{
   begin
@@ -230,11 +254,12 @@ create or replace package body xlsx_writer as -- {{{
                                style_id      integer  :=    0,
                                text          varchar2 := null,
                                value_        number   := null,
-                               formula       varchar2 := null) is
+                               formula       varchar2 := null,
+                               height        number := null) is
   begin
 
     if not does_row_exist(xlsx, sheet, r) then
-       add_row(xlsx, sheet, r);
+       add_row(xlsx, sheet, r, height);
     end if;
 
     if xlsx.sheets(sheet).rows_(r).cells.exists(c) then
@@ -313,12 +338,14 @@ create or replace package body xlsx_writer as -- {{{
   end add_font; -- }}}
 
   function add_fill        (xlsx     in out book_r, -- {{{
-                            raw_            varchar2) return integer is
+                            type_    varchar2 := 'solid',
+                            color    varchar2 := '000000') return integer is
 
   begin
 
     xlsx.fills.extend;
-    xlsx.fills(xlsx.fills.count).raw_ := raw_;
+    xlsx.fills(xlsx.fills.count).patternType := type_;
+    xlsx.fills(xlsx.fills.count).rgb := color;
 
     return xlsx.fills.count + 1;  -- +1 instead of -1 because there are two default fills.
 
@@ -334,26 +361,28 @@ create or replace package body xlsx_writer as -- {{{
     return xlsx.borders.count; -- Return count instead of count-1 because the empty border is default
   end add_border; -- }}}
 
-  function add_cell_style  (xlsx         in out book_r, -- {{{
-                            font_id             integer  := 0,
-                            fill_id             integer  := 0,
-                            border_id           integer  := 0,
-                            num_fmt_id          integer  := 0,
-                            vertical_alignment  varchar2 := null,
-                            wrap_text           boolean  := null
+  function add_cell_style  (xlsx                 in out book_r, -- {{{
+                            font_id              integer  := 0,
+                            fill_id              integer  := 0,
+                            border_id            integer  := 0,
+                            num_fmt_id           integer  := 0,
+                            vertical_alignment   varchar2 := null,
+                            horizontal_alignment varchar2 := null,
+                            wrap_text            boolean  := null
                          -- raw_within          varchar2 := null
                           ) return integer is
 
     rec cell_style_r;
   begin
 
-    rec.font_id            := font_id;
-    rec.fill_id            := fill_id;
-    rec.border_id          := border_id;
-    rec.num_fmt_id         := num_fmt_id;
---  rec.raw_within         := raw_within;
-    rec.vertical_alignment := vertical_alignment;
-    rec.wrap_text          := wrap_text;
+    rec.font_id              := font_id;
+    rec.fill_id              := fill_id;
+    rec.border_id            := border_id;
+    rec.num_fmt_id           := num_fmt_id;
+--  rec.raw_within           := raw_within;
+    rec.vertical_alignment   := vertical_alignment;
+    rec.horizontal_alignment := horizontal_alignment;
+    rec.wrap_text            := wrap_text;
 
     xlsx.cell_styles.extend;
     xlsx.cell_styles(xlsx.cell_styles.count) := rec;
@@ -395,12 +424,15 @@ create or replace package body xlsx_writer as -- {{{
 
   function docProps_app return blob is -- {{{
     ret blob;
+    rets varchar2(4000);
   begin
 
     ret := start_xml_blob;
+    rets := null;
 
-    ap(ret, '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">');
-    ap(ret, '</Properties>');
+    aps(ret, rets, '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">');
+    aps(ret, rets, '</Properties>');
+    ap(ret, rets);
 
     return ret;
 
@@ -410,64 +442,65 @@ create or replace package body xlsx_writer as -- {{{
                               sheet        integer) return blob is
 
     ret blob;
+    rets varchar2(4000);
   begin
 
     ret := start_xml_blob;
+    rets := null;
 
-    ap(ret, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
-
+    aps(ret,rets, '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
 
     if xlsx.sheets(sheet).split_x is not null or -- {{{
        xlsx.sheets(sheet).split_y is not null then
 
-       ap(ret, '<sheetViews>');        
-       ap(ret, '<sheetView workbookViewId="0">');        
+       aps(ret, rets, '<sheetViews>');        
+       aps(ret, rets, '<sheetView workbookViewId="0">');        
 
-       ap(ret, '<pane');
+       aps(ret, rets, '<pane');
 
        if xlsx.sheets(sheet).split_x is not null then
-          add_attr(ret, 'xSplit', xlsx.sheets(sheet).split_x);
+          add_attrs(ret, rets, 'xSplit', xlsx.sheets(sheet).split_x);
        end if; 
 
        if xlsx.sheets(sheet).split_y is not null then
-          add_attr(ret, 'ySplit', xlsx.sheets(sheet).split_y);
+          add_attrs(ret, rets, 'ySplit', xlsx.sheets(sheet).split_y);
        end if; 
 
-       add_attr(ret, 'topLeftCell', col_to_letter(nvl(xlsx.sheets(sheet).split_x, 1) + 1) || (nvl(xlsx.sheets(sheet).split_y, 1) + 1));
-       ap(ret, ' state="frozen"/>');
+       add_attrs(ret, rets, 'topLeftCell', col_to_letter(nvl(xlsx.sheets(sheet).split_x, 1) + 1) || (nvl(xlsx.sheets(sheet).split_y, 1) + 1));
+       aps(ret, rets, ' state="frozen"/>');
 
        if xlsx.sheets(sheet).split_y is not null then
-          ap(ret, '<selection pane="bottomLeft" activeCell="B6" sqref="B6" />');
+          aps(ret, rets, '<selection pane="bottomLeft" activeCell="B6" sqref="B6" />');
        else
-          ap(ret, '<selection pane="topRight" activeCell="B6" sqref="B6" />');
+          aps(ret, rets, '<selection pane="topRight" activeCell="B6" sqref="B6" />');
        end if;
 
-       ap(ret, '</sheetView>');        
-       ap(ret, '</sheetViews>');        
+       aps(ret, rets, '</sheetView>');        
+       aps(ret, rets, '</sheetViews>');        
 
     end if; -- }}}
 
     if xlsx.sheets(sheet).col_widths.count > 0 then -- {{{
-      ap(ret, '<cols>');
+      aps(ret, rets, '<cols>');
 
       for i in 1 .. xlsx.sheets(sheet).col_widths.count loop -- {{{
 
-        ap(ret, '<col');
+        aps(ret, rets, '<col');
 
-        add_attr(ret, 'min'        , xlsx.sheets(sheet).col_widths(i).start_col);
-        add_attr(ret, 'max'        , xlsx.sheets(sheet).col_widths(i).end_col  );
-        add_attr(ret, 'width'      , xlsx.sheets(sheet).col_widths(i).width    );
+        add_attrs(ret, rets, 'min'        , xlsx.sheets(sheet).col_widths(i).start_col);
+        add_attrs(ret, rets, 'max'        , xlsx.sheets(sheet).col_widths(i).end_col  );
+        add_attrs(ret, rets, 'width'      , xlsx.sheets(sheet).col_widths(i).width    );
 --      add_attr(ret, 'style'      , xlsx.sheets(sheet).col_widths(i).style    );
-        add_attr(ret, 'customWidth', 1);
+        add_attrs(ret, rets, 'customWidth', 1);
 
-        ap (ret, '/>');
+        aps (ret, rets, '/>');
 
       end loop; -- }}}
 
-      ap(ret, '</cols>');
+      aps(ret, rets, '</cols>');
     end if; -- }}}
 
-    ap(ret, '<sheetData>'); -- {{{
+    aps(ret, rets, '<sheetData>'); -- {{{
 
     declare
       r pls_integer;
@@ -476,48 +509,49 @@ create or replace package body xlsx_writer as -- {{{
       r := xlsx.sheets(sheet).rows_.first;
       while r is not null loop -- {{{
  
-        ap(ret, '<row');
-        add_attr(ret, 'r', r);
+        aps(ret, rets, '<row');
+        add_attrs(ret, rets, 'r', r);
 
         if xlsx.sheets(sheet).rows_(r).height is not null then
-           add_attr(ret, 'ht', xlsx.sheets(sheet).rows_(r).height);
-           add_attr(ret, 'customHeight', 1);
+           add_attrs(ret, rets, 'ht', xlsx.sheets(sheet).rows_(r).height);
+           add_attrs(ret, rets, 'customHeight', 1);
         end if;
 
-        ap(ret, '>');
+        aps(ret, rets, '>');
  
 /*      if xlsx.sheets(sheet).rows_(r).cells.count = 0 then
            raise_application_error(-20800, 'Row ' || r || ' does not contain any cells');
         end if;*/
 
+
         c := xlsx.sheets(sheet).rows_(r).cells.first;
         while c is not null loop -- {{{
 
-          ap(ret, '<c');
+          aps(ret, rets, '<c');
 
-          add_attr(ret, 'r', col_to_letter(c) || r);
-          add_attr(ret, 's', xlsx.sheets(sheet).rows_(r).cells(c).style_id);
+          add_attrs(ret, rets, 'r', col_to_letter(c) || r);
+          add_attrs(ret, rets, 's', xlsx.sheets(sheet).rows_(r).cells(c).style_id);
 
           if xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id is not null then
-             add_attr(ret, 't', 's'); -- Type is String
+             add_attrs(ret, rets, 't', 's'); -- Type is String
           end if;
 
-          ap(ret, '>');
+          aps(ret, rets, '>');
 
 
           if xlsx.sheets(sheet).rows_(r).cells(c).formula is not null then
-             ap(ret, '<f>' || xlsx.sheets(sheet).rows_(r).cells(c).formula || '</f>');
+             aps(ret, rets, '<f>' || xlsx.sheets(sheet).rows_(r).cells(c).formula || '</f>');
           end if;
 
           if xlsx.sheets(sheet).rows_(r).cells(c).value_ is not null then
-             ap(ret, '<v>' || xlsx.sheets(sheet).rows_(r).cells(c).value_ || '</v>');
+             aps(ret, rets, '<v>' || xlsx.sheets(sheet).rows_(r).cells(c).value_ || '</v>');
           end if;
 
           if xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id is not null then
-             ap(ret, '<v>' || xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id || '</v>');
+             aps(ret, rets, '<v>' || xlsx.sheets(sheet).rows_(r).cells(c).shared_string_id || '</v>');
           end if;
 
-          ap(ret, '</c>');
+          aps(ret, rets, '</c>');
 
           c := xlsx.sheets(sheet).rows_(r).cells.next(c);
 
@@ -525,25 +559,26 @@ create or replace package body xlsx_writer as -- {{{
         
         r := xlsx.sheets(sheet).rows_.next(r);
  
-        ap(ret, '</row>');
+        aps(ret, rets, '</row>');
       end loop; -- }}}
     end;
 
-    ap(ret, '</sheetData>'); -- }}}
+    aps(ret, rets, '</sheetData>'); -- }}}
 
-    ap(ret, '<pageMargins left="0.36000000000000004" right="0.2" top="1" bottom="1" header="0.5" footer="0.5" />');
+    aps(ret, rets, '<pageMargins left="0.36000000000000004" right="0.2" top="1" bottom="1" header="0.5" footer="0.5" />');
   
-    ap(ret, '<pageSetup paperSize="9" scale="67" orientation="landscape" horizontalDpi="4294967292" verticalDpi="4294967292" />');
+    aps(ret, rets, '<pageSetup paperSize="9" scale="67" orientation="landscape" horizontalDpi="4294967292" verticalDpi="4294967292" />');
   
     for d in 1 .. xlsx.drawings.count loop 
-      ap(ret, '<drawing r:id="rId' || d || '" /> ');
+      aps(ret, rets, '<drawing r:id="rId' || d || '" /> ');
     end loop;
 
     if xlsx.sheets(sheet).vml_drawings is not null then
-       ap(ret, '<legacyDrawing r:id="rel_vml_drawing_' || sheet || '" />');
+       aps(ret, rets, '<legacyDrawing r:id="rel_vml_drawing_' || sheet || '" />');
     end if;
 
-    ap(ret, '</worksheet>');
+    aps(ret, rets, '</worksheet>');
+    ap(ret, rets);
 
     return ret;
 
@@ -551,140 +586,144 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_styles(xlsx in book_r) return blob is -- {{{
     ret blob;
-
-    tag_alignment boolean := false;
+    rets varchar2(4000);
   begin
-
     ret := start_xml_blob;
+    rets := null;
 
-    ap(ret, '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
+    aps(ret, rets, '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">');
 
     if xlsx.num_fmts.count > 0 then -- {{{
-       ap(ret, '<numFmts>');
+       aps(ret, rets, '<numFmts>');
 
        for n in 1 .. xlsx.num_fmts.count loop
-           ap(ret, '<numFmt ' || xlsx.num_fmts(n).raw_ || ' />');
+           aps(ret, rets, '<numFmt ' || xlsx.num_fmts(n).raw_ || ' />');
        end loop;
 
-       ap(ret, '</numFmts>');
+       aps(ret, rets, '</numFmts>');
 
     end if; -- }}}
 
-    ap(ret, '<fonts>'); -- {{{
+    aps(ret, rets, '<fonts>'); -- {{{
 
-    ap(ret, '<font><sz val="11"/><name val="Calibri" /></font>'); -- Default font.
+    aps(ret, rets, '<font><sz val="11"/><name val="Calibri" /></font>'); -- Default font.
 
     for f in 1 .. xlsx.fonts.count loop -- {{{
 
-      ap(ret, '<font><name val="' || xlsx.fonts(f).name  || '"/>' ||
+      aps(ret, rets, '<font><name val="' || xlsx.fonts(f).name  || '"/>' ||
                     '  <sz val="' || xlsx.fonts(f).size_ || '"/>');
 
       if xlsx.fonts(f).color is not null then
-         ap(ret, '<color ' || xlsx.fonts(f).color || '/>');
+         aps(ret, rets, '<color rgb="' || UPPER(xlsx.fonts(f).color) || '"/>');
       end if;
 
       if xlsx.fonts(f).i then
-         ap(ret, '<i/>');
+         aps(ret, rets, '<i/>');
       end if;
 
       if xlsx.fonts(f).b then
-         ap(ret, '<b/>');
+         aps(ret, rets, '<b/>');
       end if;
 
       if xlsx.fonts(f).u then
-         ap(ret, '<u/>');
+         aps(ret, rets, '<u/>');
       end if;
 
-      ap(ret, '</font>');
+      aps(ret, rets, '</font>');
 
     end loop; -- }}}
 
-    ap(ret, '</fonts>'); -- }}}
+    aps(ret, rets, '</fonts>'); -- }}}
 
-    ap(ret, '<fills>'); -- {{{
+    aps(ret, rets, '<fills count="' || (xlsx.fills.count + 2)  || '">'); -- {{{
 
 --  the first two pattern fills seem to somehow be default...
-    ap(ret, q'{
+    aps(ret, rets, q'{
       <fill><patternFill patternType="none"    /></fill>
       <fill><patternFill patternType="gray125" /></fill>
     }');
 
     for f in 1 .. xlsx.fills.count loop -- {{{
 
-      ap(ret, '<fill>' || xlsx.fills(f).raw_ || '</fill>');
+      aps(ret, rets, '<fill><patternFill patternType="' || xlsx.fills(f).patternType || '"><fgColor rgb="' || UPPER(xlsx.fills(f).rgb) || '"/></patternFill></fill>');
 
     end loop; -- }}}
 
-    ap(ret, '</fills>'); -- }}}
+    aps(ret, rets, '</fills>'); -- }}}
 
-    ap(ret, '<borders>'); -- {{{
+    aps(ret, rets, '<borders>'); -- {{{
 
     -- Add default «empty» border
-    ap(ret, '<border><left/><right/><top/><bottom/><diagonal/></border>');
+    aps(ret, rets, '<border><left/><right/><top/><bottom/><diagonal/></border>');
 
 
     for b in 1 .. xlsx.borders.count loop -- {{{
-        ap(ret, '<border>' || xlsx.borders(b).raw_ || '</border>');
+        aps(ret, rets, '<border>' || xlsx.borders(b).raw_ || '</border>');
     end loop; -- }}}
 
-    ap(ret, '</borders>'); -- }}}
+    aps(ret, rets, '</borders>'); -- }}}
 
     -- <cellStyleXfs>  Huh, what's this for? -- {{{
-    ap(ret, q'{<cellStyleXfs>
+    aps(ret, rets, q'{<cellStyleXfs>
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" />
     </cellStyleXfs>}'); -- }}}
 
-    ap(ret, '<cellXfs>'); -- {{{ Cell Styles
+    aps(ret, rets, '<cellXfs>'); -- {{{ Cell Styles
 
  -- Default cell style?
-    ap(ret, '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />');
+    aps(ret, rets, '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />');
 
     for c in 1 .. xlsx.cell_styles.count loop -- {{{
 
-        ap(ret, '<xf');
+        aps(ret, rets, '<xf');
 
-        add_attr(ret, 'numFmtId', xlsx.cell_styles(c).num_fmt_id);
-        add_attr(ret, 'fillId'  , xlsx.cell_styles(c).fill_id   );
-        add_attr(ret, 'fontId'  , xlsx.cell_styles(c).font_id   );
-        add_attr(ret, 'borderId', xlsx.cell_styles(c).border_id );
-        ap(ret, '>');
+        add_attrs(ret, rets, 'numFmtId', xlsx.cell_styles(c).num_fmt_id);
+        add_attrs(ret, rets, 'fillId'  , xlsx.cell_styles(c).fill_id   );
+        add_attrs(ret, rets, 'fontId'  , xlsx.cell_styles(c).font_id   );
+        add_attrs(ret, rets, 'borderId', xlsx.cell_styles(c).border_id );
+        aps(ret, rets, '>');
 
-        if xlsx.cell_styles(c).vertical_alignment is not null then
-           tag_alignment := true;
-           ap(ret, '<alignment vertical="' || xlsx.cell_styles(c).vertical_alignment || '"');
-        end if;
+        if xlsx.cell_styles(c).vertical_alignment is not null OR
+           xlsx.cell_styles(c).horizontal_alignment is not null OR 
+           xlsx.cell_styles(c).wrap_text
+        then
+               aps(ret, rets, '<alignment ');
+               if xlsx.cell_styles(c).vertical_alignment is not null
+               then
+                   aps(ret, rets, 'vertical="' || xlsx.cell_styles(c).vertical_alignment || '" ');
+               end if;
 
-        if xlsx.cell_styles(c).wrap_text is not null then
-           if not tag_alignment then
-              tag_alignment := true;
-              ap(ret, '<alignment');
-            end if;
+               if xlsx.cell_styles(c).horizontal_alignment is not null
+               then
+                  aps(ret, rets, 'horizontal="' || xlsx.cell_styles(c).horizontal_alignment || '" ');
+               end if;
 
-            ap(ret, ' wrapText="' || case when xlsx.cell_styles(c).wrap_text then '1' else '0' end || '"');
-        end if;
-
-        if tag_alignment then
-           ap(ret, '/>');
+               if xlsx.cell_styles(c).wrap_text is not null 
+               then
+                  aps(ret, rets, ' wrapText="' || case when xlsx.cell_styles(c).wrap_text then '1' else '0' end || '"');
+               end if;
+               aps(ret, rets, '/>');
         end if;
 
  --     if xlsx.cell_styles(c).raw_within is not null then
  --        ap(ret, xlsx.cell_styles(c).raw_within);
  --     end if;
 
-        ap(ret, '</xf>');
+        aps(ret, rets, '</xf>');
 
     end loop; -- }}}
 
-  ap(ret, '</cellXfs>'); -- }}}
+  aps(ret, rets, '</cellXfs>'); -- }}}
 
-    ap(ret, q'{<cellStyles count="33">
+    aps(ret, rets, q'{<cellStyles count="33">
       <cellStyle name="Normal" xfId="0" builtinId="0" />
    </cellStyles>}');
 
-    ap(ret, q'{<dxfs count="0" />}');
+    aps(ret, rets, q'{<dxfs count="0" />}');
 
 
-    ap(ret, q'{</styleSheet>}');
+    aps(ret, rets, q'{</styleSheet>}');
+    ap(ret, rets);
 
     return ret;
 
@@ -692,55 +731,59 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_sharedStrings(xlsx book_r) return blob is -- {{{
     ret blob;
+    rets varchar2(4000);
   begin
-
     ret := start_xml_blob();
+    rets := null;
 
-    ap(ret, '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="24" uniqueCount="24">');
+    aps(ret, rets, '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="24" uniqueCount="24">');
 
     for s in 1 .. xlsx.shared_strings.count loop
-      ap(ret, '<si><t xml:space="preserve">' || xlsx.shared_strings(s).val || '</t></si>');
+      aps(ret, rets, '<si><t xml:space="preserve">' || xlsx.shared_strings(s).val || '</t></si>');
     end loop;
 
-    ap(ret, '</sst>');
+    aps(ret, rets, '</sst>');
+    ap(ret, rets);
     return ret;
   end xl_sharedStrings; -- }}}
 
   function xl_workbook(xlsx in out book_r -- {{{
   ) return blob is
     ret blob := start_xml_blob;
+    rets varchar2(4000);
   begin
 
-
-    ap(ret, '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'); -- {{{
+    rets := null;
+    aps(ret, rets, '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'); -- {{{
 
 --  This line obviously necessary to prevent «has changed» message when xlsx
 --  is closed and contains formulas.
-    ap(ret, '  <fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="9303" />'); -- Older Excel version has lastEdited="4"
+    aps(ret, rets, '  <fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="9303" />'); -- Older Excel version has lastEdited="4"
 
-    ap(ret, '<sheets>'); -- {{{
+    aps(ret, rets, '<sheets>'); -- {{{
 
     for s in 1 .. xlsx.sheets.count loop -- {{{
 
-        ap(ret, '<sheet');
+        aps(ret, rets, '<sheet');
 
-        add_attr(ret, 'name'   , xlsx.sheets(s).name_);
-        add_attr(ret, 'sheetId', s                   );
-        add_attr(ret, 'r:id'   ,'rId' || s           );
+        add_attrs(ret, rets, 'name'   , xlsx.sheets(s).name_);
+        add_attrs(ret, rets, 'sheetId', s                   );
+        add_attrs(ret, rets, 'r:id'   ,'rId' || s           );
 
-        ap(ret, '/>');
+        aps(ret, rets, '/>');
 
      end loop; -- }}}
 
-    ap(ret, '</sheets>'); -- }}}
+    aps(ret, rets, '</sheets>'); -- }}}
 
 --  This line obviously necessary to prevent «has changed» message when xlsx
 --  is closed and contains formulas.
-    ap(ret, '<calcPr calcId="145621" />'); -- Older Excel Version: calcId="125725"
+    aps(ret, rets, '<calcPr calcId="145621" />'); -- Older Excel Version: calcId="125725"
 
 --  ap(ret, '<calcPr calcOnSave="0" />');
 
-    ap(ret, '</workbook>'); -- }}}
+    aps(ret, rets, '</workbook>'); -- }}}
+    ap(ret, rets);
 
     return ret;
   
@@ -748,26 +791,32 @@ create or replace package body xlsx_writer as -- {{{
 
   function rels_rels      (xlsx in out book_r) return blob is -- {{{
     ret blob;
+    rets varchar2(4000);
   begin
 
     ret := start_xml_blob();
+    rets := null;
 
-    ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
-      ap(ret, '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"  />');
-      ap(ret, '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"   Target="docProps/core.xml" />');
-      ap(ret, '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"      Target="xl/workbook.xml"   />');
-    ap(ret, '</Relationships>');
+    aps(ret, rets, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+    aps(ret, rets, '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"  />');
+    aps(ret, rets, '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"   Target="docProps/core.xml" />');
+    aps(ret, rets, '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"      Target="xl/workbook.xml"   />');
+    aps(ret, rets, '</Relationships>');
 
+    ap(ret, rets);
     return ret;
 
   end rels_rels; -- }}}
 
   function docProps_core  (xlsx in out book_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000);
   begin
+    rets := null;
 
-    ap(ret, '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
-    ap(ret, '</cp:coreProperties>');
+    aps(ret, rets, '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
+    aps(ret, rets, '</cp:coreProperties>');
+    ap(ret, rets);
 
     return ret;
 
@@ -775,24 +824,27 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_rels_workbook           (xlsx in out book_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000) := null;
     rId integer := 1;
 
     procedure add_relationship(type_ varchar2, target varchar2) is -- {{{
     begin
       
-      ap(ret, '<Relationship');
+      aps(ret, rets,  '<Relationship');
 
-      add_attr(ret, 'Id'    , 'rId' || rId); rId := rId + 1;
-      add_attr(ret, 'Type'  ,  type_      );
-      add_attr(ret, 'Target',  target     );
+      add_attrs(ret, rets, 'Id'    , 'rId' || rId); rId := rId + 1;
+      add_attrs(ret, rets, 'Type'  ,  type_      );
+      add_attrs(ret, rets, 'Target',  target     );
 
-      ap(ret, '/>');
+      aps(ret, rets, '/>');
 
 
     end add_relationship; -- }}}
   begin
 
-    ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+    rets := null;
+
+    aps(ret, rets, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
 
       for s in 1 .. xlsx.sheets.count loop
         add_relationship('http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet', 'worksheets/sheet' || s || '.xml');
@@ -801,23 +853,25 @@ create or replace package body xlsx_writer as -- {{{
       add_relationship('http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings', 'sharedStrings.xml');
       add_relationship('http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles'       , 'styles.xml'       );
 
-    ap(ret, '</Relationships>');
-
+    aps(ret, rets, '</Relationships>');
+    ap(ret,rets);
     return ret;
 
   end xl_rels_workbook; -- }}}
 
   function xl_drawings_rels_drawing1  (xlsx in out book_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000) := null;
   begin
 
-    ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+    aps(ret, rets, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
 
     for m in 1 .. xlsx.medias.count loop
-      ap(ret, '<Relationship Id="rId' || m || '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/' || xlsx.medias(m).name_ || '" />');
+      aps(ret, rets, '<Relationship Id="rId' || m || '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/' || xlsx.medias(m).name_ || '" />');
     end loop;
 
-    ap(ret, '</Relationships>');
+    aps(ret, rets, '</Relationships>');
+    ap(ret, rets);
 
     return ret;
 
@@ -825,17 +879,19 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_worksheets_rels_sheet(xlsx in out book_r, sheet integer)  return blob is -- {{{
     ret blob;
+    rets varchar2(4000);
   begin
 
+    rets := null;
 
     for r in 1 .. xlsx.sheets(sheet).sheet_rels.count loop
 
       if ret is null then
          ret := start_xml_blob;
-         ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+         aps(ret, rets, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
       end if;
 
-      ap(ret, xlsx.sheets(sheet).sheet_rels(r).raw_);
+      aps(ret, rets, xlsx.sheets(sheet).sheet_rels(r).raw_);
 
     end loop;
 
@@ -851,48 +907,53 @@ create or replace package body xlsx_writer as -- {{{
     if xlsx.sheets(sheet).vml_drawings is not null then
        if ret is null then
           ret := start_xml_blob;
-          ap(ret, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
+          aps(ret, rets, '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">');
        end if;
-       ap(ret, '<Relationship Id="rel_vml_drawing_' || sheet ||  '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" Target="../drawings/vmlDrawing' || sheet || '.vml" />');
+       aps(ret, rets, '<Relationship Id="rel_vml_drawing_' || sheet ||  '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing" Target="../drawings/vmlDrawing' || sheet || '.vml" />');
     end if;
 
     if ret is not null then
-       ap(ret, '</Relationships>');
+       aps(ret, rets, '</Relationships>');
     end if;
+
+    ap(ret,rets);
 
     return ret;
   end xl_worksheets_rels_sheet; -- }}}
 
   function content_types(xlsx in out book_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000) := null;
   begin
 
-    ap(ret, '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">');
+    aps(ret, rets, '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">');
 
 
-      ap(ret, '<Default Extension="png"  ContentType="image/png"                                                />');
-      ap(ret, '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />');
+    aps(ret, rets, '<Default Extension="png"  ContentType="image/png"                                                />');
+    aps(ret, rets, '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />');
 --    ap(ret, '<Default Extension="xml"  ContentType="application/xml"                                          />');
 
-      if xlsx.content_type_vmlDrawing then
-      ap(ret, '<Default Extension="vml"  ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing" />'); -- Needed for Drawings (of which check boxes are one)
-      end if;
+    if xlsx.content_type_vmlDrawing then
+      aps(ret, rets, '<Default Extension="vml"  ContentType="application/vnd.openxmlformats-officedocument.vmlDrawing" />'); -- Needed for Drawings (of which check boxes are one)
+    end if;
 
-      ap(ret, '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />');
+    aps(ret, rets, '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" />');
 
-      for s in 1 ..xlsx.sheets.count loop
-        ap(ret, '<Override PartName="/xl/worksheets/sheet' || s || '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml" />');
-      end loop;
+    for s in 1 ..xlsx.sheets.count loop
+      aps(ret, rets, '<Override PartName="/xl/worksheets/sheet' || s || '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml" />');
+    end loop;
 
 --    ap(ret, '<Override PartName="/xl/theme/theme1.xml"      ContentType="application/vnd.openxmlformats-officedocument.theme+xml" />');
-      ap(ret, '<Override PartName="/xl/styles.xml"            ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"        />');
-      ap(ret, '<Override PartName="/xl/sharedStrings.xml"     ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml" />');
-      ap(ret, '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"                     />');
-      ap(ret, '<Override PartName="/xl/calcChain.xml"         ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"     />');
-      ap(ret, '<Override PartName="/docProps/core.xml"        ContentType="application/vnd.openxmlformats-package.core-properties+xml"                    />');
-      ap(ret, '<Override PartName="/docProps/app.xml"         ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"         />');
+    aps(ret, rets, '<Override PartName="/xl/styles.xml"            ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"        />');
+    aps(ret, rets, '<Override PartName="/xl/sharedStrings.xml"     ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml" />');
+    aps(ret, rets, '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"                     />');
+    aps(ret, rets, '<Override PartName="/xl/calcChain.xml"         ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"     />');
+    aps(ret, rets, '<Override PartName="/docProps/core.xml"        ContentType="application/vnd.openxmlformats-package.core-properties+xml"                    />');
+    aps(ret, rets, '<Override PartName="/docProps/app.xml"         ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"         />');
 
-    ap(ret, '</Types>');
+    aps(ret, rets, '</Types>');
+
+    ap(ret,rets);
 
     return ret;
 
@@ -900,20 +961,22 @@ create or replace package body xlsx_writer as -- {{{
 
   function xl_calcChain(xlsx in out book_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000) := null;
   begin
 
-    ap(ret, '<calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
+    aps(ret, rets, '<calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
 
     for e in 1 .. xlsx.calc_chain_elems.count loop
 
-        ap(ret, '<c');
-        add_attr(ret, 'r', xlsx.calc_chain_elems(e).cell_reference);
-        add_attr(ret, 'i', xlsx.calc_chain_elems(e).sheet         );
-        ap(ret, '/>');
+        aps(ret, rets, '<c');
+        add_attrs(ret, rets, 'r', xlsx.calc_chain_elems(e).cell_reference);
+        add_attrs(ret, rets, 'i', xlsx.calc_chain_elems(e).sheet         );
+        aps(ret, rets, '/>');
 
     end loop;
 
-    ap(ret, '</calcChain>');
+    aps(ret, rets, '</calcChain>');
+    ap(ret,rets);
 
     return ret;
 
@@ -921,14 +984,15 @@ create or replace package body xlsx_writer as -- {{{
 
   function vml_drawing(v vml_drawing_r) return blob is -- {{{
     ret blob := start_xml_blob;
+    rets varchar2(4000) := null;
 
   begin
 
-    ap(ret, '<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">');
+    aps(ret, rets, '<xml xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">');
 
     for cb in 1 .. v.checkboxes.count loop
 
-      ap(ret, '<v:shape
+      aps(ret, rets, '<v:shape
          type="#_x0000_t201" 
          filled="f"
          fillcolor="window [65]"
@@ -937,13 +1001,13 @@ create or replace package body xlsx_writer as -- {{{
          o:insetmode="auto"
        >');
 
-      ap(ret, '<v:textbox style="mso-direction-alt:auto" o:singleclick="f">
+      aps(ret, rets, '<v:textbox style="mso-direction-alt:auto" o:singleclick="f">
       <div style="text-align:left">
         <font face="Tahoma" size="160" color="auto">' || v.checkboxes(cb).text || '</font>
       </div>
     </v:textbox>');
 
-    ap(ret, '<x:ClientData ObjectType="Checkbox">
+    aps(ret, rets, '<x:ClientData ObjectType="Checkbox">
       <x:SizeWithCells />
       <x:Anchor>' ||
         (v.checkboxes(cb).col_left -1) || ',' || -- Left column
@@ -963,12 +1027,12 @@ create or replace package body xlsx_writer as -- {{{
     </x:ClientData>');
 
 
-      ap(ret, '</v:shape>');
+      aps(ret, rets, '</v:shape>');
 
     end loop;
 
-
-    ap(ret, '</xml>');
+    aps(ret, rets, '</xml>');
+    ap(ret,rets);
 
     return ret;
 
@@ -1006,10 +1070,8 @@ create or replace package body xlsx_writer as -- {{{
        xb_xl_worksheets_rels_sheet  := xl_worksheets_rels_sheet  (xlsx, s);
        if xb_xl_worksheets_rels_sheet is not null then
           zipper.addFile(xlsx_b, 'xl/worksheets/_rels/sheet' || s || '.xml.rels', xb_xl_worksheets_rels_sheet);
-
        end if;
     end loop;
-
 
     for s in 1 .. xlsx.sheets.count loop
         zipper.addFile(xlsx_b, 'xl/worksheets/sheet' || s || '.xml', xl_worksheets_sheet       (xlsx, s));
@@ -1023,7 +1085,6 @@ create or replace package body xlsx_writer as -- {{{
         end if;
 
     end loop;
-
 
     add_blob_to_zip(xlsx_b, '_rels/.rels'                        , rels_rels                 (xlsx));
     add_blob_to_zip(xlsx_b, 'docProps/app.xml'                   , docProps_app              ()    );
@@ -1184,4 +1245,3 @@ create or replace package body xlsx_writer as -- {{{
 end xlsx_writer; -- }}}
 /
 show errors
-
